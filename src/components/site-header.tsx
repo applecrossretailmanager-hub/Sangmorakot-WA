@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCurrentProfile } from "@/lib/auth";
 import { site } from "@/lib/site";
 
@@ -16,8 +17,17 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 font-bold tracking-wide">
-          <span className="text-primary text-xl">Sangmorakot</span>
-          <span className="text-gold text-xl">WA</span>
+          <Image
+            src="/logo.jpg"
+            alt={site.name}
+            width={48}
+            height={48}
+            className="h-12 w-12 rounded-full"
+            priority
+          />
+          <span className="hidden sm:inline text-gold text-lg leading-tight">
+            Sangmorakot WA
+          </span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted">
