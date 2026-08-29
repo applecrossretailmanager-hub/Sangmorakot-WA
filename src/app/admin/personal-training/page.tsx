@@ -29,6 +29,28 @@ export default async function AdminPersonalTrainingPage() {
   return (
     <div className="space-y-16">
       <section>
+        <h2 className="text-xl font-bold mb-4">Upcoming Bookings</h2>
+        <div className="space-y-2">
+          {bookings?.map((b) => (
+            <div key={b.id} className="card flex items-center justify-between gap-4 py-3">
+              <div>
+                <p className="font-medium">{formatDateTime(b.start_at)}</p>
+                <p className="text-sm text-muted">
+                  {b.profile?.full_name ?? "Member"} with {b.trainer?.name}
+                </p>
+              </div>
+              <form action={cancelBookingAdmin.bind(null, b.id)}>
+                <button type="submit" className="text-sm text-muted hover:text-primary">
+                  Cancel
+                </button>
+              </form>
+            </div>
+          ))}
+          {!bookings?.length && <p className="text-muted">No upcoming bookings.</p>}
+        </div>
+      </section>
+
+      <section>
         <h2 className="text-xl font-bold mb-4">Trainers</h2>
         <div className="space-y-3 mb-6">
           {trainers?.map((t) => (
@@ -124,28 +146,6 @@ export default async function AdminPersonalTrainingPage() {
             <button type="submit" className="btn-primary">Add window</button>
           </form>
         </details>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-bold mb-4">Upcoming Bookings</h2>
-        <div className="space-y-2">
-          {bookings?.map((b) => (
-            <div key={b.id} className="card flex items-center justify-between gap-4 py-3">
-              <div>
-                <p className="font-medium">{formatDateTime(b.start_at)}</p>
-                <p className="text-sm text-muted">
-                  {b.profile?.full_name ?? "Member"} with {b.trainer?.name}
-                </p>
-              </div>
-              <form action={cancelBookingAdmin.bind(null, b.id)}>
-                <button type="submit" className="text-sm text-muted hover:text-primary">
-                  Cancel
-                </button>
-              </form>
-            </div>
-          ))}
-          {!bookings?.length && <p className="text-muted">No upcoming bookings.</p>}
-        </div>
       </section>
     </div>
   );
