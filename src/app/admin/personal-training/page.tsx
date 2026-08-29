@@ -26,6 +26,13 @@ export default async function AdminPersonalTrainingPage() {
       .limit(50),
   ]);
 
+  const availabilityByTrainer = new Map<string, typeof availability>();
+  for (const a of availability ?? []) {
+    const list = availabilityByTrainer.get(a.trainer_id) ?? [];
+    list.push(a);
+    availabilityByTrainer.set(a.trainer_id, list);
+  }
+
   return (
     <div className="space-y-16">
       <section>
@@ -89,20 +96,35 @@ export default async function AdminPersonalTrainingPage() {
 
       <section>
         <h2 className="text-xl font-bold mb-4">Weekly Availability</h2>
-        <div className="space-y-2 mb-6">
-          {availability?.map((a) => (
-            <div key={a.id} className="card flex items-center justify-between gap-4 py-3">
-              <p className="text-sm">
-                <span className="font-medium">{a.trainer?.name}</span> — {DAY_LABELS[a.day_of_week]}{" "}
-                {a.start_time.slice(0, 5)}–{a.end_time.slice(0, 5)} ({a.slot_minutes} min slots)
-              </p>
-              <form action={removeAvailability.bind(null, a.id)}>
-                <button type="submit" className="text-sm text-muted hover:text-primary">
-                  Remove
-                </button>
-              </form>
-            </div>
-          ))}
+
+        <div className="space-y-8 mb-6">
+          {trainers?.map((t) => {
+            const windows = availabilityByTrainer.get(t.id) ?? [];
+            if (!windows.length) return null;
+            return (
+              <div key={t.id}>
+                <h3 className="font-semibold text-gold mb-2">{t.name}</h3>
+                <div className="space-y-2">
+                  {windows.map((a) => (
+                    <div
+                      key={a.id}
+                      className="card flex items-center justify-between gap-4 py-3"
+                    >
+                      <p className="text-sm">
+                        {DAY_LABELS[a.day_of_week]} {a.start_time.slice(0, 5)}–
+                        {a.end_time.slice(0, 5)} ({a.slot_minutes} min slots)
+                      </p>
+                      <form action={removeAvailability.bind(null, a.id)}>
+                        <button type="submit" className="text-sm text-muted hover:text-primary">
+                          Remove
+                        </button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
           {!availability?.length && <p className="text-muted">No availability windows set.</p>}
         </div>
 
@@ -119,16 +141,28 @@ export default async function AdminPersonalTrainingPage() {
                 ))}
               </select>
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-sm text-muted">Day</span>
-              <select name="day_of_week" required className="input" defaultValue="1">
+            <div>
+              <span className="mb-1.5 block text-sm text-muted">
+                Days (pick as many as share these hours)
+              </span>
+              <div className="flex flex-wrap gap-2">
                 {DAY_LABELS.map((label, i) => (
-                  <option key={i} value={i}>
+                  <label
+                    key={i}
+                    className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm cursor-pointer has-[:checked]:border-gold has-[:checked]:text-gold"
+                  >
+                    <input
+                      type="checkbox"
+                      name="day_of_week"
+                      value={i}
+                      defaultChecked={i >= 1 && i <= 5}
+                      className="accent-current"
+                    />
                     {label}
-                  </option>
+                  </label>
                 ))}
-              </select>
-            </label>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="mb-1.5 block text-sm text-muted">Start time</span>
@@ -143,7 +177,7 @@ export default async function AdminPersonalTrainingPage() {
               <span className="mb-1.5 block text-sm text-muted">Slot length (minutes)</span>
               <input name="slot_minutes" type="number" min="15" step="15" defaultValue={60} className="input" />
             </label>
-            <button type="submit" className="btn-primary">Add window</button>
+            <button type="submit" className="btn-primary">Add window(s)</button>
           </form>
         </details>
       </section>

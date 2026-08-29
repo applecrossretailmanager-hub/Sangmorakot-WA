@@ -228,13 +228,24 @@ export async function toggleTrainerActive(id: string, active: boolean) {
 export async function addAvailability(formData: FormData) {
   await requireAdmin();
   const supabase = await createClient();
-  await supabase.from("pt_availability").insert({
-    trainer_id: str(formData, "trainer_id"),
-    day_of_week: num(formData, "day_of_week") ?? 0,
-    start_time: str(formData, "start_time"),
-    end_time: str(formData, "end_time"),
-    slot_minutes: num(formData, "slot_minutes") ?? 60,
-  });
+
+  const days = formData.getAll("day_of_week").map(Number);
+  if (!days.length) return;
+
+  const trainerId = str(formData, "trainer_id");
+  const startTime = str(formData, "start_time");
+  const endTime = str(formData, "end_time");
+  const slotMinutes = num(formData, "slot_minutes") ?? 60;
+
+  await supabase.from("pt_availability").insert(
+    days.map((day) => ({
+      trainer_id: trainerId,
+      day_of_week: day,
+      start_time: startTime,
+      end_time: endTime,
+      slot_minutes: slotMinutes,
+    })),
+  );
   revalidatePath("/admin/personal-training");
 }
 
