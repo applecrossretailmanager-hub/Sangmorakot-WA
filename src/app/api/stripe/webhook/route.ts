@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  sendEmail,
+  ptPackagePaidEmail,
+  ptPackageFailedEmail,
+  membershipPaymentFailedEmail,
+} from "@/lib/resend";
 
 // Stripe webhooks need the raw request body to verify the signature, so this
 // route must not be parsed as JSON by the framework.
@@ -175,7 +181,7 @@ export async function POST(request: Request) {
           .from("pt_purchases")
           .update({ status: "paid", sessions_remaining: sessionsTotal })
           .eq("stripe_checkout_session_id", session.id)
-          .select("id")
+          .select("id, package:pt_packages(name)")
           .single();
 
         if (purchase && session.amount_total) {
@@ -193,6 +199,14 @@ export async function POST(request: Request) {
             { onConflict: "stripe_event_id", ignoreDuplicates: true },
           );
         }
+
+        if (session.customer_details?.email) {
+          await sendEmail({
+            to: session.customer_details.email,
+            subject: "Your session pack is ready",
+            html: ptPackagePaidEmail(purchase?.package?.name ?? "your session pack", sessionsTotal),
+          });
+        }
         break;
       }
 
@@ -207,7 +221,7 @@ export async function POST(request: Request) {
           .from("pt_purchases")
           .update({ status: "canceled" })
           .eq("stripe_checkout_session_id", session.id)
-          .select("id")
+          .select("id, package:pt_packages(name)")
           .single();
 
         if (purchase && session.amount_total) {
@@ -224,6 +238,14 @@ export async function POST(request: Request) {
             },
             { onConflict: "stripe_event_id", ignoreDuplicates: true },
           );
+        }
+
+        if (session.customer_details?.email) {
+          await sendEmail({
+            to: session.customer_details.email,
+            subject: "Your payment didn't go through",
+            html: ptPackageFailedEmail(purchase?.package?.name ?? "your session pack"),
+          });
         }
         break;
       }
@@ -285,10 +307,20 @@ export async function POST(request: Request) {
             : invoice.parent?.subscription_details?.subscription?.id;
         if (!subscriptionId) break;
 
-        await admin
+        const { data: membership } = await admin
           .from("memberships")
           .update({ status: "past_due" })
-          .eq("stripe_subscription_id", subscriptionId);
+          .eq("stripe_subscription_id", subscriptionId)
+          .select("plan:membership_plans(name)")
+          .single();
+
+        if (invoice.customer_email) {
+          await sendEmail({
+            to: invoice.customer_email,
+            subject: "Action needed: your membership payment failed",
+            html: membershipPaymentFailedEmail(membership?.plan?.name ?? "your membership"),
+          });
+        }
         break;
       }
 
