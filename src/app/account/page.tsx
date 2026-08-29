@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<string, string> = {
   pending_cash: "Pending — pay at gym",
   past_due: "Payment past due",
   canceled: "Cancelled",
-  incomplete: "Incomplete",
+  incomplete: "Payment processing — check back shortly",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -54,6 +54,17 @@ export default async function AccountPage() {
   const sessionsRemaining =
     purchases?.filter((p) => p.status === "paid").reduce((s, p) => s + p.sessions_remaining, 0) ??
     0;
+
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const pendingPurchases =
+    purchases?.filter((p) => p.status === "pending" && p.payment_method === "stripe") ?? [];
+  const failedPurchases =
+    purchases?.filter(
+      (p) =>
+        p.status === "canceled" &&
+        p.payment_method === "stripe" &&
+        new Date(p.created_at).getTime() > thirtyDaysAgo,
+    ) ?? [];
 
   return (
     <div className="container-page py-16 max-w-3xl space-y-8">
@@ -101,6 +112,34 @@ export default async function AccountPage() {
             {sessionsRemaining === 1 ? "" : "s"} left
           </span>
         </div>
+
+        {!!pendingPurchases.length && (
+          <div className="mb-4 space-y-2">
+            {pendingPurchases.map((p) => (
+              <p
+                key={p.id}
+                className="rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold"
+              >
+                Payment processing for {p.package?.name} — this can take a few days for bank
+                transfers. We&rsquo;ll add your sessions as soon as it clears.
+              </p>
+            ))}
+          </div>
+        )}
+
+        {!!failedPurchases.length && (
+          <div className="mb-4 space-y-2">
+            {failedPurchases.map((p) => (
+              <p
+                key={p.id}
+                className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary"
+              >
+                Your payment for {p.package?.name} didn&rsquo;t go through. No sessions were
+                added — please try again.
+              </p>
+            ))}
+          </div>
+        )}
 
         {bookings?.length ? (
           <ul className="divide-y divide-border mb-4">
