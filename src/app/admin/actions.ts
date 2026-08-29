@@ -39,6 +39,32 @@ export async function createPlan(formData: FormData) {
   revalidatePath("/membership");
 }
 
+export async function updatePlan(id: string, formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const features = str(formData, "features")
+    .split("\n")
+    .map((f) => f.trim())
+    .filter(Boolean);
+
+  await supabase
+    .from("membership_plans")
+    .update({
+      name: str(formData, "name"),
+      description: str(formData, "description") || null,
+      price_cents: Math.round(Number(formData.get("price")) * 100),
+      interval: str(formData, "interval"),
+      interval_count: num(formData, "interval_count") ?? 1,
+      features,
+      sort_order: num(formData, "sort_order") ?? 0,
+    })
+    .eq("id", id);
+
+  revalidatePath("/admin/plans");
+  revalidatePath("/membership");
+}
+
 export async function togglePlanActive(id: string, active: boolean) {
   await requireAdmin();
   const supabase = await createClient();
@@ -68,6 +94,25 @@ export async function createPackage(formData: FormData) {
     price_cents: Math.round(Number(formData.get("price")) * 100),
     sort_order: num(formData, "sort_order") ?? 0,
   });
+
+  revalidatePath("/admin/plans");
+  revalidatePath("/personal-training");
+}
+
+export async function updatePackage(id: string, formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  await supabase
+    .from("pt_packages")
+    .update({
+      name: str(formData, "name"),
+      description: str(formData, "description") || null,
+      session_count: num(formData, "session_count") ?? 1,
+      price_cents: Math.round(Number(formData.get("price")) * 100),
+      sort_order: num(formData, "sort_order") ?? 0,
+    })
+    .eq("id", id);
 
   revalidatePath("/admin/plans");
   revalidatePath("/personal-training");

@@ -1,15 +1,22 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney, formatInterval } from "@/lib/format";
+import type { Json } from "@/lib/supabase/types";
 import {
   createPlan,
+  updatePlan,
   togglePlanActive,
   deletePlan,
   createPackage,
+  updatePackage,
   togglePackageActive,
   deletePackage,
 } from "../actions";
 
 export const revalidate = 0;
+
+function featuresToLines(features: Json) {
+  return Array.isArray(features) ? (features as string[]).join("\n") : "";
+}
 
 export default async function AdminPlansPage() {
   const supabase = await createClient();
@@ -24,29 +31,101 @@ export default async function AdminPlansPage() {
         <h2 className="text-xl font-bold mb-4">Membership Plans</h2>
         <div className="space-y-3 mb-8">
           {plans?.map((plan) => (
-            <div key={plan.id} className="card flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="font-medium">
-                  {plan.name}{" "}
-                  {!plan.active && <span className="text-xs text-muted">(hidden)</span>}
-                </p>
-                <p className="text-sm text-muted">
-                  {formatMoney(plan.price_cents, plan.currency.toUpperCase())}{" "}
-                  {formatInterval(plan.interval, plan.interval_count)}
-                </p>
+            <div key={plan.id} className="card">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">
+                    {plan.name}{" "}
+                    {!plan.active && <span className="text-xs text-muted">(hidden)</span>}
+                  </p>
+                  <p className="text-sm text-muted">
+                    {formatMoney(plan.price_cents, plan.currency.toUpperCase())}{" "}
+                    {formatInterval(plan.interval, plan.interval_count)}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <form action={togglePlanActive.bind(null, plan.id, !plan.active)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3">
+                      {plan.active ? "Hide" : "Show"}
+                    </button>
+                  </form>
+                  <form action={deletePlan.bind(null, plan.id)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <form action={togglePlanActive.bind(null, plan.id, !plan.active)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3">
-                    {plan.active ? "Hide" : "Show"}
+
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-gold">Edit</summary>
+                <form
+                  action={updatePlan.bind(null, plan.id)}
+                  className="mt-4 space-y-3 max-w-lg"
+                >
+                  <Row>
+                    <Field label="Name">
+                      <input name="name" required defaultValue={plan.name} className="input" />
+                    </Field>
+                    <Field label="Price (AUD)">
+                      <input
+                        name="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        defaultValue={(plan.price_cents / 100).toFixed(2)}
+                        className="input"
+                      />
+                    </Field>
+                  </Row>
+                  <Field label="Description">
+                    <input
+                      name="description"
+                      defaultValue={plan.description ?? ""}
+                      className="input"
+                    />
+                  </Field>
+                  <Row>
+                    <Field label="Billing interval">
+                      <select name="interval" className="input" defaultValue={plan.interval}>
+                        <option value="day">Day</option>
+                        <option value="week">Week</option>
+                        <option value="month">Month</option>
+                        <option value="year">Year</option>
+                      </select>
+                    </Field>
+                    <Field label="Every N intervals">
+                      <input
+                        name="interval_count"
+                        type="number"
+                        min="1"
+                        defaultValue={plan.interval_count}
+                        className="input"
+                      />
+                    </Field>
+                  </Row>
+                  <Field label="Features (one per line)">
+                    <textarea
+                      name="features"
+                      rows={3}
+                      defaultValue={featuresToLines(plan.features)}
+                      className="input"
+                    />
+                  </Field>
+                  <Field label="Sort order">
+                    <input
+                      name="sort_order"
+                      type="number"
+                      defaultValue={plan.sort_order}
+                      className="input"
+                    />
+                  </Field>
+                  <button type="submit" className="btn-primary">
+                    Save changes
                   </button>
                 </form>
-                <form action={deletePlan.bind(null, plan.id)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
-                    Delete
-                  </button>
-                </form>
-              </div>
+              </details>
             </div>
           ))}
           {!plans?.length && <p className="text-muted">No plans yet.</p>}
@@ -90,29 +169,86 @@ export default async function AdminPlansPage() {
         <h2 className="text-xl font-bold mb-4">Personal Training Packages</h2>
         <div className="space-y-3 mb-8">
           {packages?.map((pkg) => (
-            <div key={pkg.id} className="card flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <p className="font-medium">
-                  {pkg.name}{" "}
-                  {!pkg.active && <span className="text-xs text-muted">(hidden)</span>}
-                </p>
-                <p className="text-sm text-muted">
-                  {formatMoney(pkg.price_cents, pkg.currency.toUpperCase())} — {pkg.session_count} session
-                  {pkg.session_count > 1 ? "s" : ""}
-                </p>
+            <div key={pkg.id} className="card">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">
+                    {pkg.name}{" "}
+                    {!pkg.active && <span className="text-xs text-muted">(hidden)</span>}
+                  </p>
+                  <p className="text-sm text-muted">
+                    {formatMoney(pkg.price_cents, pkg.currency.toUpperCase())} — {pkg.session_count} session
+                    {pkg.session_count > 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <form action={togglePackageActive.bind(null, pkg.id, !pkg.active)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3">
+                      {pkg.active ? "Hide" : "Show"}
+                    </button>
+                  </form>
+                  <form action={deletePackage.bind(null, pkg.id)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <form action={togglePackageActive.bind(null, pkg.id, !pkg.active)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3">
-                    {pkg.active ? "Hide" : "Show"}
+
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-gold">Edit</summary>
+                <form
+                  action={updatePackage.bind(null, pkg.id)}
+                  className="mt-4 space-y-3 max-w-lg"
+                >
+                  <Row>
+                    <Field label="Name">
+                      <input name="name" required defaultValue={pkg.name} className="input" />
+                    </Field>
+                    <Field label="Price (AUD)">
+                      <input
+                        name="price"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                        defaultValue={(pkg.price_cents / 100).toFixed(2)}
+                        className="input"
+                      />
+                    </Field>
+                  </Row>
+                  <Field label="Description">
+                    <input
+                      name="description"
+                      defaultValue={pkg.description ?? ""}
+                      className="input"
+                    />
+                  </Field>
+                  <Row>
+                    <Field label="Session count">
+                      <input
+                        name="session_count"
+                        type="number"
+                        min="1"
+                        required
+                        defaultValue={pkg.session_count}
+                        className="input"
+                      />
+                    </Field>
+                    <Field label="Sort order">
+                      <input
+                        name="sort_order"
+                        type="number"
+                        defaultValue={pkg.sort_order}
+                        className="input"
+                      />
+                    </Field>
+                  </Row>
+                  <button type="submit" className="btn-primary">
+                    Save changes
                   </button>
                 </form>
-                <form action={deletePackage.bind(null, pkg.id)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
-                    Delete
-                  </button>
-                </form>
-              </div>
+              </details>
             </div>
           ))}
           {!packages?.length && <p className="text-muted">No packages yet.</p>}
