@@ -55,10 +55,24 @@ export default async function AdminOverviewPage() {
   return (
     <div className="space-y-12">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat label="Active members" value={activeMembers ?? 0} />
-        <Stat label="Pending cash memberships" value={pendingCashMembers ?? 0} highlight />
-        <Stat label="Pending cash PT payments" value={pendingPtPurchases ?? 0} highlight />
-        <Stat label="Upcoming PT bookings" value={upcomingBookingsCount ?? 0} />
+        <Stat label="Active members" value={activeMembers ?? 0} href="/admin/members" />
+        <Stat
+          label="Pending cash memberships"
+          value={pendingCashMembers ?? 0}
+          highlight
+          href="/admin/members"
+        />
+        <Stat
+          label="Pending cash PT payments"
+          value={pendingPtPurchases ?? 0}
+          highlight
+          href="/admin/members"
+        />
+        <Stat
+          label="Upcoming PT bookings"
+          value={upcomingBookingsCount ?? 0}
+          href="/admin/personal-training"
+        />
       </div>
 
       <section>
@@ -117,17 +131,19 @@ function Stat({
   label,
   value,
   highlight,
+  href,
 }: {
   label: string;
   value: number;
   highlight?: boolean;
+  href: string;
 }) {
   return (
-    <div className="card">
+    <Link href={href} className="card block hover:border-gold transition-colors">
       <p className="text-sm text-muted mb-1">{label}</p>
       <p className={`text-3xl font-extrabold ${highlight && value > 0 ? "text-gold" : ""}`}>
         {value}
       </p>
-    </div>
+    </Link>
   );
 }
