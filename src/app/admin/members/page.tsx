@@ -12,10 +12,42 @@ const STATUS_LABEL: Record<string, string> = {
   incomplete: "Incomplete",
 };
 
+const STATUS_COLOR: Record<string, string> = {
+  active: "text-gold",
+  pending_cash: "text-primary font-medium",
+  past_due: "text-primary font-medium",
+  canceled: "text-muted",
+  incomplete: "text-primary",
+};
+
+const PAYMENT_TYPE_LABEL: Record<string, string> = {
+  membership: "Membership",
+  pt_package: "PT Package",
+};
+
+function formatDate(iso: string | null) {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export default async function AdminMembersPage() {
   const supabase = await createClient();
 
-  const [{ data: memberships }, { data: pendingPurchases }, { data: profiles }] =
+  const [{ data: memberships }, { data: pendingPurchases }, { data: profiles }, { data: payments }] =
     await Promise.all([
       supabase
         .from("memberships")
@@ -28,7 +60,15 @@ export default async function AdminMembersPage() {
         .eq("status", "pending")
         .order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase
+        .from("payments")
+        .select("*, profile:profiles!payments_user_id_fkey(full_name)")
+        .order("created_at", { ascending: false })
+        .limit(150),
     ]);
+
+  const attentionCount =
+    memberships?.filter((m) => m.status === "pending_cash" || m.status === "past_due").length ?? 0;
 
   return (
     <div className="space-y-16">
@@ -57,7 +97,14 @@ export default async function AdminMembersPage() {
       )}
 
       <section>
-        <h2 className="text-xl font-bold mb-4">Memberships</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold">Memberships</h2>
+          {attentionCount > 0 && (
+            <span className="text-sm text-primary font-medium">
+              {attentionCount} need{attentionCount === 1 ? "s" : ""} attention
+            </span>
+          )}
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -66,6 +113,7 @@ export default async function AdminMembersPage() {
                 <th className="py-2 pr-4">Plan</th>
                 <th className="py-2 pr-4">Method</th>
                 <th className="py-2 pr-4">Status</th>
+                <th className="py-2 pr-4">Renews / Ends</th>
                 <th className="py-2 pr-4"></th>
               </tr>
             </thead>
@@ -78,7 +126,14 @@ export default async function AdminMembersPage() {
                   </td>
                   <td className="py-3 pr-4">{m.plan?.name}</td>
                   <td className="py-3 pr-4 capitalize">{m.payment_method}</td>
-                  <td className="py-3 pr-4">{STATUS_LABEL[m.status] ?? m.status}</td>
+                  <td className={`py-3 pr-4 ${STATUS_COLOR[m.status] ?? ""}`}>
+                    {STATUS_LABEL[m.status] ?? m.status}
+                  </td>
+                  <td className="py-3 pr-4 text-muted">
+                    {m.current_period_end
+                      ? `${formatDate(m.current_period_end)}${m.cancel_at_period_end ? " (cancelling)" : ""}`
+                      : "—"}
+                  </td>
                   <td className="py-3 pr-4">
                     <div className="flex gap-2 justify-end">
                       {m.status === "pending_cash" && (
@@ -101,8 +156,49 @@ export default async function AdminMembersPage() {
               ))}
               {!memberships?.length && (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-muted">
+                  <td colSpan={6} className="py-6 text-center text-muted">
                     No memberships yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-bold mb-4">Payment History</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-muted border-b border-border">
+                <th className="py-2 pr-4">Date</th>
+                <th className="py-2 pr-4">Member</th>
+                <th className="py-2 pr-4">Type</th>
+                <th className="py-2 pr-4">Amount</th>
+                <th className="py-2 pr-4">Method</th>
+                <th className="py-2 pr-4">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments?.map((p) => (
+                <tr key={p.id} className="border-b border-border/60">
+                  <td className="py-3 pr-4 text-muted">{formatDateTime(p.created_at)}</td>
+                  <td className="py-3 pr-4">{p.profile?.full_name ?? "—"}</td>
+                  <td className="py-3 pr-4">{PAYMENT_TYPE_LABEL[p.type] ?? p.type}</td>
+                  <td className="py-3 pr-4">{formatMoney(p.amount_cents, p.currency)}</td>
+                  <td className="py-3 pr-4 capitalize">{p.method}</td>
+                  <td className="py-3 pr-4 capitalize">
+                    <span className={p.status === "succeeded" ? "text-gold" : "text-primary"}>
+                      {p.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {!payments?.length && (
+                <tr>
+                  <td colSpan={6} className="py-6 text-center text-muted">
+                    No payments recorded yet.
                   </td>
                 </tr>
               )}
