@@ -262,3 +262,57 @@ export async function cancelBookingAdmin(id: string) {
   await supabase.rpc("cancel_pt_booking", { p_booking_id: id });
   revalidatePath("/admin/personal-training");
 }
+
+// ---------- group class timetable ----------
+
+export async function createClassSchedule(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const days = formData.getAll("day_of_week").map(Number);
+  if (!days.length) return;
+
+  const name = str(formData, "name");
+  const description = str(formData, "description") || null;
+  const trainerId = str(formData, "trainer_id") || null;
+  const startTime = str(formData, "start_time");
+  const durationMinutes = num(formData, "duration_minutes") ?? 60;
+  const capacity = num(formData, "capacity") ?? 10;
+
+  await supabase.from("class_schedule").insert(
+    days.map((day) => ({
+      name,
+      description,
+      trainer_id: trainerId,
+      day_of_week: day,
+      start_time: startTime,
+      duration_minutes: durationMinutes,
+      capacity,
+    })),
+  );
+  revalidatePath("/admin/classes");
+  revalidatePath("/classes");
+}
+
+export async function toggleClassScheduleActive(id: string, active: boolean) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("class_schedule").update({ active }).eq("id", id);
+  revalidatePath("/admin/classes");
+  revalidatePath("/classes");
+}
+
+export async function deleteClassSchedule(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("class_schedule").delete().eq("id", id);
+  revalidatePath("/admin/classes");
+  revalidatePath("/classes");
+}
+
+export async function cancelClassBookingAdmin(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.rpc("cancel_class_booking", { p_booking_id: id });
+  revalidatePath("/admin/classes");
+}

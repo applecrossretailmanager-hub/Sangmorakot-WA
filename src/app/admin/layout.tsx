@@ -5,6 +5,7 @@ const tabs = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/plans", label: "Plans & Packages" },
   { href: "/admin/members", label: "Members & Payments" },
+  { href: "/admin/classes", label: "Classes" },
   { href: "/admin/personal-training", label: "Personal Training" },
 ];
 

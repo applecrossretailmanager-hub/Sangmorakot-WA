@@ -3,16 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function CancelBookingButton({ bookingId }: { bookingId: string }) {
+export function CancelBookingButton({
+  bookingId,
+  endpoint = "/api/pt/bookings/cancel",
+  confirmMessage = "Cancel this session? Your session will be credited back.",
+}: {
+  bookingId: string;
+  endpoint?: string;
+  confirmMessage?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onClick() {
-    if (!confirm("Cancel this session? Your session will be credited back.")) return;
+    if (!confirm(confirmMessage)) return;
     setLoading(true);
     setError(null);
-    const res = await fetch("/api/pt/bookings/cancel", {
+    const res = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId }),

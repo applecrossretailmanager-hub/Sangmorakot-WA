@@ -12,6 +12,95 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_bookings: {
+        Row: {
+          class_date: string
+          created_at: string
+          id: string
+          schedule_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          class_date: string
+          created_at?: string
+          id?: string
+          schedule_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          class_date?: string
+          created_at?: string
+          id?: string
+          schedule_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_bookings_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "class_schedule"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_schedule: {
+        Row: {
+          active: boolean
+          capacity: number
+          created_at: string
+          day_of_week: number
+          description: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          start_time: string
+          trainer_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          day_of_week: number
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name: string
+          start_time: string
+          trainer_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          capacity?: number
+          created_at?: string
+          day_of_week?: number
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          start_time?: string
+          trainer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_schedule_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "pt_trainers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_plans: {
         Row: {
           active: boolean
@@ -419,6 +508,42 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      book_class: {
+        Args: { p_class_date: string; p_schedule_id: string }
+        Returns: {
+          class_date: string
+          created_at: string
+          id: string
+          schedule_id: string
+          status: string
+          user_id: string
+        }
+      }
+      cancel_class_booking: {
+        Args: { p_booking_id: string }
+        Returns: {
+          class_date: string
+          created_at: string
+          id: string
+          schedule_id: string
+          status: string
+          user_id: string
+        }
+      }
+      get_class_occurrences: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          booked_count: number
+          capacity: number
+          class_date: string
+          description: string | null
+          end_at: string
+          name: string
+          schedule_id: string
+          start_at: string
+          trainer_name: string | null
+        }[]
+      }
       book_pt_session: {
         Args: { p_end_at: string; p_start_at: string; p_trainer_id: string }
         Returns: {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { formatMoney, formatInterval, formatDateTime } from "@/lib/format";
+import { formatMoney, formatInterval, formatDateTime, formatDayHeading } from "@/lib/format";
 import { ManageBillingButton } from "./manage-billing-button";
 import { CancelBookingButton } from "./cancel-booking-button";
 
@@ -25,37 +25,48 @@ const STATUS_COLOR: Record<string, string> = {
   incomplete: "text-primary",
 };
 
+function isWithinLast30Days(iso: string) {
+  return new Date(iso).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000;
+}
+
 export default async function AccountPage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [{ data: membership }, { data: purchases }, { data: bookings }] = await Promise.all([
-    supabase
-      .from("memberships")
-      .select("*, plan:membership_plans(*)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("pt_purchases")
-      .select("*, package:pt_packages(name)")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("pt_bookings")
-      .select("*, trainer:pt_trainers(name)")
-      .eq("user_id", user.id)
-      .eq("status", "booked")
-      .gt("start_at", new Date().toISOString())
-      .order("start_at"),
-  ]);
+  const [{ data: membership }, { data: purchases }, { data: bookings }, { data: classBookings }] =
+    await Promise.all([
+      supabase
+        .from("memberships")
+        .select("*, plan:membership_plans(*)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("pt_purchases")
+        .select("*, package:pt_packages(name)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("pt_bookings")
+        .select("*, trainer:pt_trainers(name)")
+        .eq("user_id", user.id)
+        .eq("status", "booked")
+        .gt("start_at", new Date().toISOString())
+        .order("start_at"),
+      supabase
+        .from("class_bookings")
+        .select("*, schedule:class_schedule(name, start_time)")
+        .eq("user_id", user.id)
+        .eq("status", "booked")
+        .gte("class_date", new Date().toISOString().slice(0, 10))
+        .order("class_date"),
+    ]);
 
   const sessionsRemaining =
     purchases?.filter((p) => p.status === "paid").reduce((s, p) => s + p.sessions_remaining, 0) ??
     0;
 
-  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
   const pendingPurchases =
     purchases?.filter((p) => p.status === "pending" && p.payment_method === "stripe") ?? [];
   const failedPurchases =
@@ -63,7 +74,7 @@ export default async function AccountPage() {
       (p) =>
         p.status === "canceled" &&
         p.payment_method === "stripe" &&
-        new Date(p.created_at).getTime() > thirtyDaysAgo,
+        isWithinLast30Days(p.created_at),
     ) ?? [];
 
   return (
@@ -165,6 +176,38 @@ export default async function AccountPage() {
             Buy More Sessions
           </Link>
         </div>
+      </section>
+
+      <section className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg">Group Classes</h2>
+          <Link href="/classes" className="btn-outline">
+            View Timetable
+          </Link>
+        </div>
+
+        {classBookings?.length ? (
+          <ul className="divide-y divide-border">
+            {classBookings.map((b) => (
+              <li key={b.id} className="py-3 flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">{b.schedule?.name}</p>
+                  <p className="text-sm text-muted">
+                    {formatDayHeading(`${b.class_date}T00:00:00`)}{" "}
+                    {b.schedule?.start_time?.slice(0, 5) ?? ""}
+                  </p>
+                </div>
+                <CancelBookingButton
+                  bookingId={b.id}
+                  endpoint="/api/classes/bookings/cancel"
+                  confirmMessage="Cancel this class booking?"
+                />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted">No upcoming classes booked.</p>
+        )}
       </section>
     </div>
   );
