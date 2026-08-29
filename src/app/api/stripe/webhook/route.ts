@@ -114,6 +114,12 @@ export async function POST(request: Request) {
           const sessionsTotal = Number(session.metadata?.session_count ?? 0);
           if (!userId || !packageId || !sessionsTotal) break;
 
+          // Delayed-notification methods (e.g. BECS Direct Debit) complete the
+          // checkout session immediately but the payment itself is still
+          // processing. Only grant sessions once payment_status is actually
+          // "paid" — otherwise wait for async_payment_succeeded/failed below.
+          const isPaid = session.payment_status === "paid";
+
           const { data: purchase } = await admin
             .from("pt_purchases")
             .upsert(
@@ -121,9 +127,9 @@ export async function POST(request: Request) {
                 user_id: userId,
                 package_id: packageId,
                 sessions_total: sessionsTotal,
-                sessions_remaining: sessionsTotal,
+                sessions_remaining: isPaid ? sessionsTotal : 0,
                 payment_method: "stripe",
-                status: "paid",
+                status: isPaid ? "paid" : "pending",
                 stripe_checkout_session_id: session.id,
                 stripe_payment_intent_id:
                   typeof session.payment_intent === "string"
@@ -135,7 +141,7 @@ export async function POST(request: Request) {
             .select("id")
             .single();
 
-          if (purchase && session.amount_total) {
+          if (purchase && isPaid && session.amount_total) {
             await admin.from("payments").upsert(
               {
                 user_id: userId,
@@ -150,6 +156,74 @@ export async function POST(request: Request) {
               { onConflict: "stripe_event_id", ignoreDuplicates: true },
             );
           }
+        }
+        break;
+      }
+
+      // Fired once a delayed-notification payment (e.g. BECS Direct Debit)
+      // actually clears, for sessions that completed with payment_status
+      // "unpaid" above.
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.metadata?.type !== "pt_package") break;
+
+        const userId = session.metadata?.user_id;
+        const sessionsTotal = Number(session.metadata?.session_count ?? 0);
+        if (!userId || !sessionsTotal) break;
+
+        const { data: purchase } = await admin
+          .from("pt_purchases")
+          .update({ status: "paid", sessions_remaining: sessionsTotal })
+          .eq("stripe_checkout_session_id", session.id)
+          .select("id")
+          .single();
+
+        if (purchase && session.amount_total) {
+          await admin.from("payments").upsert(
+            {
+              user_id: userId,
+              type: "pt_package",
+              reference_id: purchase.id,
+              amount_cents: session.amount_total,
+              currency: (session.currency ?? "aud").toUpperCase(),
+              method: "stripe",
+              stripe_event_id: event.id,
+              status: "succeeded",
+            },
+            { onConflict: "stripe_event_id", ignoreDuplicates: true },
+          );
+        }
+        break;
+      }
+
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.metadata?.type !== "pt_package") break;
+
+        const userId = session.metadata?.user_id;
+        if (!userId) break;
+
+        const { data: purchase } = await admin
+          .from("pt_purchases")
+          .update({ status: "canceled" })
+          .eq("stripe_checkout_session_id", session.id)
+          .select("id")
+          .single();
+
+        if (purchase && session.amount_total) {
+          await admin.from("payments").upsert(
+            {
+              user_id: userId,
+              type: "pt_package",
+              reference_id: purchase.id,
+              amount_cents: session.amount_total,
+              currency: (session.currency ?? "aud").toUpperCase(),
+              method: "stripe",
+              stripe_event_id: event.id,
+              status: "failed",
+            },
+            { onConflict: "stripe_event_id", ignoreDuplicates: true },
+          );
         }
         break;
       }
