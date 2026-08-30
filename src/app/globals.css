@@ -32,6 +32,21 @@ body {
   color: var(--foreground);
 }
 
+.scroll-dark {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scroll-dark::-webkit-scrollbar {
+  height: 8px;
+}
+.scroll-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-dark::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}
+
 .container-page {
   width: 100%;
   max-width: 72rem;

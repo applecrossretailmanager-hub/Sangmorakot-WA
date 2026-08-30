@@ -50,12 +50,18 @@ export function ClassTimetable({
   schedule,
   occurrences,
   isLoggedIn,
+  myBookingIds,
 }: {
   schedule: ScheduleItem[];
   occurrences: Occurrence[];
   isLoggedIn: boolean;
+  myBookingIds: Record<string, string>;
 }) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  function toggle(id: string) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
 
   const times = Array.from(new Set(schedule.map((c) => c.start_time))).sort();
   const typeColors = useTypeColors(schedule);
@@ -68,12 +74,9 @@ export function ClassTimetable({
     byCell.set(key, list);
   }
 
-  const selected = schedule.find((c) => c.id === selectedId) ?? null;
-  const selectedOccurrences = selected
-    ? occurrences
-        .filter((o) => o.schedule_id === selected.id)
-        .sort((a, b) => a.class_date.localeCompare(b.class_date))
-    : [];
+  const selected = selectedIds
+    .map((id) => schedule.find((c) => c.id === id))
+    .filter((c): c is ScheduleItem => !!c);
 
   return (
     <div className="mb-16">
@@ -86,17 +89,17 @@ export function ClassTimetable({
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full border-collapse text-sm">
+      <div className="scroll-dark overflow-x-auto rounded-xl border border-border">
+        <table className="w-full table-fixed border-collapse text-sm">
           <thead>
             <tr>
-              <th className="sticky left-0 z-10 bg-surface border-b border-r border-border px-3 py-3 text-left text-xs text-muted font-medium w-20">
+              <th className="bg-surface border-b border-r border-border px-2 py-3 text-left text-xs text-muted font-medium w-14 sm:w-20">
                 Time
               </th>
               {WEEK_ORDER.map((day) => (
                 <th
                   key={day}
-                  className="border-b border-border px-3 py-3 text-gold font-semibold whitespace-nowrap min-w-[140px]"
+                  className="border-b border-border px-1.5 sm:px-3 py-3 text-gold font-semibold whitespace-nowrap"
                 >
                   {DAY_LABELS_SHORT[day]}
                 </th>
@@ -106,23 +109,23 @@ export function ClassTimetable({
           <tbody>
             {times.map((time) => (
               <tr key={time}>
-                <td className="sticky left-0 z-10 bg-surface border-r border-b border-border px-3 py-2 text-xs font-medium text-muted whitespace-nowrap">
+                <td className="bg-surface border-r border-b border-border px-2 py-2 text-xs font-medium text-muted whitespace-nowrap">
                   {time.slice(0, 5)}
                 </td>
                 {WEEK_ORDER.map((day) => {
                   const classes = byCell.get(`${day}_${time}`) ?? [];
                   return (
-                    <td key={day} className="border-b border-border px-1.5 py-1.5 align-top">
+                    <td key={day} className="border-b border-border p-1 sm:p-1.5 align-top">
                       <div className="flex flex-col gap-1">
                         {classes.map((c) => (
                           <button
                             key={c.id}
                             type="button"
                             title={c.name}
-                            onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
-                            className={`w-full rounded-md px-2 py-1.5 text-left text-xs leading-tight font-medium transition-colors truncate ${
+                            onClick={() => toggle(c.id)}
+                            className={`w-full rounded-md px-1.5 sm:px-2.5 py-2 sm:py-3 text-left text-[11px] sm:text-sm leading-tight font-medium transition-colors ${
                               typeColors.get(c.name)?.cell ?? "bg-surface-2 hover:bg-gold/20"
-                            } ${c.id === selectedId ? "ring-2 ring-foreground" : ""}`}
+                            } ${selectedIds.includes(c.id) ? "ring-2 ring-foreground" : ""}`}
                           >
                             {c.name}
                           </button>
@@ -136,53 +139,81 @@ export function ClassTimetable({
           </tbody>
         </table>
       </div>
-      <p className="text-center text-xs text-muted mt-3 mb-6">Tap a class above to see spots left</p>
+      <p className="text-center text-xs text-muted mt-3 mb-6">
+        Tap classes above to see spots left — select more than one to compare
+      </p>
 
-      {selected && (
-        <div className="card max-w-2xl mx-auto">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-lg">{selected.name} — spots left</h3>
-            <button
-              type="button"
-              onClick={() => setSelectedId(null)}
-              className="text-sm text-muted hover:text-foreground"
-            >
-              Close
-            </button>
-          </div>
-          {selectedOccurrences.length ? (
-            <div className="space-y-2">
-              {selectedOccurrences.map((o) => {
-                const spotsLeft = o.capacity - o.booked_count;
-                const full = spotsLeft <= 0;
-                return (
-                  <div
-                    key={`${o.schedule_id}_${o.class_date}`}
-                    className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-border last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">
-                        {formatDayHeading(`${o.class_date}T00:00:00`)}
-                      </p>
-                      <p className="text-sm text-muted">
-                        {full ? "Full" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}{" "}
-                        ({o.booked_count}/{o.capacity})
-                      </p>
-                    </div>
-                    <BookClassButton
-                      scheduleId={o.schedule_id}
-                      classDate={o.class_date}
-                      full={full}
-                      isLoggedIn={isLoggedIn}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-muted text-sm">No upcoming dates in the next two weeks.</p>
-          )}
+      {!!selected.length && (
+        <div className="space-y-4 max-w-2xl mx-auto">
+          {selected.map((sel) => (
+            <ClassPanel
+              key={sel.id}
+              selected={sel}
+              occurrences={occurrences.filter((o) => o.schedule_id === sel.id)}
+              myBookingIds={myBookingIds}
+              isLoggedIn={isLoggedIn}
+              onClose={() => toggle(sel.id)}
+            />
+          ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function ClassPanel({
+  selected,
+  occurrences,
+  myBookingIds,
+  isLoggedIn,
+  onClose,
+}: {
+  selected: ScheduleItem;
+  occurrences: Occurrence[];
+  myBookingIds: Record<string, string>;
+  isLoggedIn: boolean;
+  onClose: () => void;
+}) {
+  const sorted = [...occurrences].sort((a, b) => a.class_date.localeCompare(b.class_date));
+
+  return (
+    <div className="card">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-lg">{selected.name} — spots left</h3>
+        <button type="button" onClick={onClose} className="text-sm text-muted hover:text-foreground">
+          Close
+        </button>
+      </div>
+      {sorted.length ? (
+        <div className="space-y-2">
+          {sorted.map((o) => {
+            const spotsLeft = o.capacity - o.booked_count;
+            const full = spotsLeft <= 0;
+            return (
+              <div
+                key={`${o.schedule_id}_${o.class_date}`}
+                className="flex flex-wrap items-center justify-between gap-3 py-2 border-b border-border last:border-0"
+              >
+                <div>
+                  <p className="text-sm font-medium">{formatDayHeading(`${o.class_date}T00:00:00`)}</p>
+                  <p className="text-sm text-muted">
+                    {full ? "Full" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}{" "}
+                    ({o.booked_count}/{o.capacity})
+                  </p>
+                </div>
+                <BookClassButton
+                  scheduleId={o.schedule_id}
+                  classDate={o.class_date}
+                  full={full}
+                  isLoggedIn={isLoggedIn}
+                  initialBookingId={myBookingIds[`${o.schedule_id}_${o.class_date}`]}
+                />
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="text-muted text-sm">No upcoming dates in the next two weeks.</p>
       )}
     </div>
   );

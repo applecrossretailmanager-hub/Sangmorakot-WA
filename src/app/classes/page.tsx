@@ -16,7 +16,7 @@ export default async function ClassesPage() {
   const to = new Date();
   to.setDate(to.getDate() + 14);
 
-  const [{ data: schedule }, { data: occurrences }] = await Promise.all([
+  const [{ data: schedule }, { data: occurrences }, { data: myBookings }] = await Promise.all([
     supabase
       .from("class_schedule")
       .select("*, trainer:pt_trainers(name)")
@@ -27,7 +27,21 @@ export default async function ClassesPage() {
       p_from: from.toISOString().slice(0, 10),
       p_to: to.toISOString().slice(0, 10),
     }),
+    user
+      ? supabase
+          .from("class_bookings")
+          .select("id, schedule_id, class_date")
+          .eq("user_id", user.id)
+          .eq("status", "booked")
+          .gte("class_date", from.toISOString().slice(0, 10))
+          .lte("class_date", to.toISOString().slice(0, 10))
+      : Promise.resolve({ data: null }),
   ]);
+
+  const myBookingIds: Record<string, string> = {};
+  for (const b of myBookings ?? []) {
+    myBookingIds[`${b.schedule_id}_${b.class_date}`] = b.id;
+  }
 
   const byDate = new Map<string, typeof occurrences>();
   for (const o of occurrences ?? []) {
@@ -52,7 +66,12 @@ export default async function ClassesPage() {
       {!schedule?.length ? (
         <p className="text-center text-muted mb-16">No classes scheduled yet — check back soon.</p>
       ) : (
-        <ClassTimetable schedule={schedule} occurrences={occurrences ?? []} isLoggedIn={!!user} />
+        <ClassTimetable
+          schedule={schedule}
+          occurrences={occurrences ?? []}
+          isLoggedIn={!!user}
+          myBookingIds={myBookingIds}
+        />
       )}
 
       {!!dates.length && (
@@ -89,6 +108,7 @@ export default async function ClassesPage() {
                           classDate={c.class_date}
                           full={full}
                           isLoggedIn={!!user}
+                          initialBookingId={myBookingIds[`${c.schedule_id}_${c.class_date}`]}
                         />
                       </div>
                     );

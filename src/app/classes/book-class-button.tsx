@@ -9,16 +9,18 @@ export function BookClassButton({
   classDate,
   full,
   isLoggedIn,
+  initialBookingId,
 }: {
   scheduleId: string;
   classDate: string;
   full: boolean;
   isLoggedIn: boolean;
+  initialBookingId?: string | null;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [booked, setBooked] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(initialBookingId ?? null);
 
   if (!isLoggedIn) {
     return (
@@ -28,8 +30,22 @@ export function BookClassButton({
     );
   }
 
-  if (booked) {
-    return <span className="text-sm text-gold">Booked ✓</span>;
+  if (bookingId) {
+    return (
+      <div className="text-right">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gold">Booked ✓</span>
+          <button
+            onClick={cancel}
+            disabled={loading}
+            className="text-xs text-muted hover:text-primary underline underline-offset-2"
+          >
+            {loading ? "Cancelling…" : "Cancel"}
+          </button>
+        </div>
+        {error && <p className="text-xs text-primary mt-1">{error}</p>}
+      </div>
+    );
   }
 
   if (full) {
@@ -54,7 +70,26 @@ export function BookClassButton({
       setError(data.error ?? "Could not book that class.");
       return;
     }
-    setBooked(true);
+    setBookingId(data.booking?.id ?? null);
+    router.refresh();
+  }
+
+  async function cancel() {
+    if (!bookingId) return;
+    setLoading(true);
+    setError(null);
+    const res = await fetch("/api/classes/bookings/cancel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId }),
+    });
+    setLoading(false);
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      setError(data?.error ?? "Could not cancel that booking.");
+      return;
+    }
+    setBookingId(null);
     router.refresh();
   }
 
