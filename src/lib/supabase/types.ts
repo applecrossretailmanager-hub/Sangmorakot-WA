@@ -476,6 +476,33 @@ export type Database = {
           },
         ]
       }
+      testimonials: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          quote: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          quote: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          quote?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       pt_trainers: {
         Row: {
           active: boolean

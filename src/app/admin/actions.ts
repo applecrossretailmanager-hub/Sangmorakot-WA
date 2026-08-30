@@ -316,3 +316,66 @@ export async function cancelClassBookingAdmin(id: string) {
   await supabase.rpc("cancel_class_booking", { p_booking_id: id });
   revalidatePath("/admin/classes");
 }
+
+// ---------- testimonials ----------
+
+export async function createTestimonial(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("testimonials").insert({
+    name: str(formData, "name"),
+    quote: str(formData, "quote"),
+    sort_order: num(formData, "sort_order") ?? 0,
+  });
+  revalidatePath("/admin/site");
+  revalidatePath("/");
+}
+
+export async function toggleTestimonialActive(id: string, active: boolean) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("testimonials").update({ active }).eq("id", id);
+  revalidatePath("/admin/site");
+  revalidatePath("/");
+}
+
+export async function deleteTestimonial(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("testimonials").delete().eq("id", id);
+  revalidatePath("/admin/site");
+  revalidatePath("/");
+}
+
+// ---------- trainer bio/photo ----------
+
+export async function updateTrainerProfile(id: string, formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  let photoUrl = str(formData, "photo_url") || null;
+
+  const file = formData.get("photo");
+  if (file instanceof File && file.size > 0) {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `trainers/${id}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("photos").upload(path, file, {
+      upsert: true,
+      contentType: file.type || undefined,
+    });
+    if (!error) {
+      photoUrl = supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
+    }
+  }
+
+  await supabase
+    .from("pt_trainers")
+    .update({
+      bio: str(formData, "bio") || null,
+      photo_url: photoUrl,
+    })
+    .eq("id", id);
+  revalidatePath("/admin/personal-training");
+  revalidatePath("/about");
+  revalidatePath("/personal-training");
+}

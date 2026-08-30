@@ -1,7 +1,17 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export const revalidate = 0;
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: testimonials } = await supabase
+    .from("testimonials")
+    .select("*")
+    .eq("active", true)
+    .order("sort_order");
+
   return (
     <div>
       <section className="border-b border-border bg-gradient-to-b from-surface to-background">
@@ -28,6 +38,18 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="border-b border-border bg-gold/10">
+        <div className="container-page py-6 flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
+          <p className="font-medium">
+            <span className="text-gold">New here?</span> Your first class is free — no
+            experience necessary, just come along.
+          </p>
+          <Link href="/classes" className="text-sm text-gold hover:underline whitespace-nowrap">
+            See class times →
+          </Link>
+        </div>
+      </section>
+
       <section className="container-page py-20">
         <div className="grid md:grid-cols-3 gap-6">
           <Feature
@@ -47,6 +69,20 @@ export default function Home() {
           />
         </div>
       </section>
+
+      {!!testimonials?.length && (
+        <section className="container-page pb-20">
+          <h2 className="text-2xl font-bold text-center mb-8">What Our Members Say</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonials.map((t) => (
+              <div key={t.id} className="card">
+                <p className="text-muted italic leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</p>
+                <p className="text-sm font-medium text-gold">— {t.name}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="container-page pb-24">
         <div className="card flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">

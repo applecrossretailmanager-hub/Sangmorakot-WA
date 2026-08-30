@@ -4,6 +4,7 @@ import { DAY_LABELS } from "@/lib/days";
 import {
   createTrainer,
   toggleTrainerActive,
+  updateTrainerProfile,
   addAvailability,
   removeAvailability,
   cancelBookingAdmin,
@@ -61,18 +62,56 @@ export default async function AdminPersonalTrainingPage() {
         <h2 className="text-xl font-bold mb-4">Trainers</h2>
         <div className="space-y-3 mb-6">
           {trainers?.map((t) => (
-            <div key={t.id} className="card flex items-center justify-between gap-4">
-              <div>
-                <p className="font-medium">
-                  {t.name} {!t.active && <span className="text-xs text-muted">(hidden)</span>}
-                </p>
-                {t.bio && <p className="text-sm text-muted">{t.bio}</p>}
+            <div key={t.id} className="card">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">
+                    {t.name} {!t.active && <span className="text-xs text-muted">(hidden)</span>}
+                  </p>
+                  {t.bio && <p className="text-sm text-muted">{t.bio}</p>}
+                </div>
+                <form action={toggleTrainerActive.bind(null, t.id, !t.active)}>
+                  <button type="submit" className="btn-outline text-sm py-1.5 px-3">
+                    {t.active ? "Hide" : "Show"}
+                  </button>
+                </form>
               </div>
-              <form action={toggleTrainerActive.bind(null, t.id, !t.active)}>
-                <button type="submit" className="btn-outline text-sm py-1.5 px-3">
-                  {t.active ? "Hide" : "Show"}
-                </button>
-              </form>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-gold">Edit bio / photo</summary>
+                <form
+                  action={updateTrainerProfile.bind(null, t.id)}
+                  className="mt-4 space-y-3 max-w-lg"
+                >
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Bio</span>
+                    <textarea name="bio" rows={2} defaultValue={t.bio ?? ""} className="input" />
+                  </label>
+                  {t.photo_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={t.photo_url}
+                      alt={t.name}
+                      className="h-16 w-16 rounded-full object-cover"
+                    />
+                  )}
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Upload photo</span>
+                    <input name="photo" type="file" accept="image/*" className="input" />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">
+                      …or paste an image URL instead
+                    </span>
+                    <input
+                      name="photo_url"
+                      defaultValue={t.photo_url ?? ""}
+                      placeholder="https://…"
+                      className="input"
+                    />
+                  </label>
+                  <button type="submit" className="btn-primary">Save changes</button>
+                </form>
+              </details>
             </div>
           ))}
           {!trainers?.length && <p className="text-muted">No trainers yet.</p>}
