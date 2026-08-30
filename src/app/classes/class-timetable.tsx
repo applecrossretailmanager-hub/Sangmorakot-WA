@@ -19,14 +19,14 @@ type Occurrence = {
   booked_count: number;
 };
 
-const DAY_LABELS_FULL: Record<number, string> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
+const DAY_LABELS_SHORT: Record<number, string> = {
+  0: "Sun",
+  1: "Mon",
+  2: "Tue",
+  3: "Wed",
+  4: "Thu",
+  5: "Fri",
+  6: "Sat",
 };
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
@@ -41,11 +41,14 @@ export function ClassTimetable({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const scheduleByDay = new Map<number, ScheduleItem[]>();
+  const times = Array.from(new Set(schedule.map((c) => c.start_time))).sort();
+
+  const byCell = new Map<string, ScheduleItem[]>();
   for (const c of schedule) {
-    const list = scheduleByDay.get(c.day_of_week) ?? [];
+    const key = `${c.day_of_week}_${c.start_time}`;
+    const list = byCell.get(key) ?? [];
     list.push(c);
-    scheduleByDay.set(c.day_of_week, list);
+    byCell.set(key, list);
   }
 
   const selected = schedule.find((c) => c.id === selectedId) ?? null;
@@ -57,36 +60,59 @@ export function ClassTimetable({
 
   return (
     <div className="mb-16">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 mb-6">
-        {WEEK_ORDER.map((day) => (
-          <div key={day} className="card">
-            <h3 className="font-semibold text-gold mb-3">{DAY_LABELS_FULL[day]}</h3>
-            <div className="space-y-1">
-              {(scheduleByDay.get(day) ?? []).map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  title={c.name}
-                  onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
-                  className={`flex items-baseline gap-2 w-full text-left rounded-md -mx-1 px-1 py-1.5 transition-colors ${
-                    c.id === selectedId ? "bg-gold/10 text-gold" : "hover:bg-surface-2"
-                  }`}
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-surface border-b border-r border-border px-3 py-3 text-left text-xs text-muted font-medium w-20">
+                Time
+              </th>
+              {WEEK_ORDER.map((day) => (
+                <th
+                  key={day}
+                  className="border-b border-border px-3 py-3 text-gold font-semibold whitespace-nowrap min-w-[140px]"
                 >
-                  <p className="text-sm font-medium shrink-0">{c.start_time.slice(0, 5)}</p>
-                  <p className="text-sm truncate">
-                    {c.name}
-                    {c.trainer?.name && (
-                      <span className="text-xs text-muted"> · {c.trainer.name}</span>
-                    )}
-                  </p>
-                </button>
+                  {DAY_LABELS_SHORT[day]}
+                </th>
               ))}
-              {!scheduleByDay.get(day)?.length && <p className="text-sm text-muted">—</p>}
-            </div>
-          </div>
-        ))}
+            </tr>
+          </thead>
+          <tbody>
+            {times.map((time) => (
+              <tr key={time}>
+                <td className="sticky left-0 z-10 bg-surface border-r border-b border-border px-3 py-2 text-xs font-medium text-muted whitespace-nowrap">
+                  {time.slice(0, 5)}
+                </td>
+                {WEEK_ORDER.map((day) => {
+                  const classes = byCell.get(`${day}_${time}`) ?? [];
+                  return (
+                    <td key={day} className="border-b border-border px-1.5 py-1.5 align-top">
+                      <div className="flex flex-col gap-1">
+                        {classes.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            title={c.name}
+                            onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
+                            className={`w-full rounded-md px-2 py-1.5 text-left text-xs leading-tight transition-colors truncate ${
+                              c.id === selectedId
+                                ? "bg-gold text-background font-medium"
+                                : "bg-surface-2 hover:bg-gold/20 hover:text-gold"
+                            }`}
+                          >
+                            {c.name}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      <p className="text-center text-xs text-muted mb-6">Tap a class above to see spots left</p>
+      <p className="text-center text-xs text-muted mt-3 mb-6">Tap a class above to see spots left</p>
 
       {selected && (
         <div className="card max-w-2xl mx-auto">
