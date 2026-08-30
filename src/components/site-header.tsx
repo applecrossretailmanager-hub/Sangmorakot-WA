@@ -82,6 +82,11 @@ export async function SiteHeader() {
             {l.label}
           </Link>
         ))}
+        {profile?.role === "admin" && (
+          <Link href="/admin" className="whitespace-nowrap text-gold hover:text-foreground">
+            Admin
+          </Link>
+        )}
       </nav>
       <span className="sr-only">{site.name}</span>
     </header>

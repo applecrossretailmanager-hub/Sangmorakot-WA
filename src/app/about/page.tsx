@@ -94,7 +94,7 @@ export default async function AboutPage() {
 
       <div className="mb-16">
         <h2 className="text-2xl font-bold mb-6">Surasak in the Ring</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-border">
             <Image src="/gallery/surasak-win-1.jpg" alt="Surasak having his hand raised after a win" fill className="object-cover" />
           </div>

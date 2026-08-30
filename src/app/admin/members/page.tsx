@@ -105,7 +105,7 @@ export default async function AdminMembersPage() {
             </span>
           )}
         </div>
-        <div className="overflow-x-auto">
+        <div className="scroll-dark overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted border-b border-border">
@@ -168,7 +168,7 @@ export default async function AdminMembersPage() {
 
       <section>
         <h2 className="text-xl font-bold mb-4">Payment History</h2>
-        <div className="overflow-x-auto">
+        <div className="scroll-dark overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted border-b border-border">
@@ -209,7 +209,7 @@ export default async function AdminMembersPage() {
 
       <section>
         <h2 className="text-xl font-bold mb-4">All Members</h2>
-        <div className="overflow-x-auto">
+        <div className="scroll-dark overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-muted border-b border-border">
