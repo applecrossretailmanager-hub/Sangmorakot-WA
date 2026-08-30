@@ -30,6 +30,22 @@ const DAY_LABELS_SHORT: Record<number, string> = {
 };
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
+// Cycled by first-seen class name so each class type gets a consistent color
+// across the grid and the legend, however many class types end up existing.
+const TYPE_COLORS = [
+  { swatch: "bg-gold", cell: "bg-gold/90 text-background hover:bg-gold" },
+  { swatch: "bg-primary", cell: "bg-primary/90 text-white hover:bg-primary" },
+  { swatch: "bg-slate-400", cell: "bg-slate-400/80 text-background hover:bg-slate-400" },
+  { swatch: "bg-emerald-500", cell: "bg-emerald-500/80 text-background hover:bg-emerald-500" },
+];
+
+function useTypeColors(schedule: ScheduleItem[]) {
+  const names = Array.from(new Set(schedule.map((c) => c.name)));
+  const map = new Map<string, (typeof TYPE_COLORS)[number]>();
+  names.forEach((name, i) => map.set(name, TYPE_COLORS[i % TYPE_COLORS.length]));
+  return map;
+}
+
 export function ClassTimetable({
   schedule,
   occurrences,
@@ -42,6 +58,7 @@ export function ClassTimetable({
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const times = Array.from(new Set(schedule.map((c) => c.start_time))).sort();
+  const typeColors = useTypeColors(schedule);
 
   const byCell = new Map<string, ScheduleItem[]>();
   for (const c of schedule) {
@@ -60,6 +77,15 @@ export function ClassTimetable({
 
   return (
     <div className="mb-16">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 mb-4">
+        {Array.from(typeColors.entries()).map(([name, color]) => (
+          <div key={name} className="flex items-center gap-2 text-xs text-muted">
+            <span className={`h-2.5 w-2.5 rounded-full ${color.swatch}`} />
+            {name}
+          </div>
+        ))}
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full border-collapse text-sm">
           <thead>
@@ -94,11 +120,9 @@ export function ClassTimetable({
                             type="button"
                             title={c.name}
                             onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
-                            className={`w-full rounded-md px-2 py-1.5 text-left text-xs leading-tight transition-colors truncate ${
-                              c.id === selectedId
-                                ? "bg-gold text-background font-medium"
-                                : "bg-surface-2 hover:bg-gold/20 hover:text-gold"
-                            }`}
+                            className={`w-full rounded-md px-2 py-1.5 text-left text-xs leading-tight font-medium transition-colors truncate ${
+                              typeColors.get(c.name)?.cell ?? "bg-surface-2 hover:bg-gold/20"
+                            } ${c.id === selectedId ? "ring-2 ring-foreground" : ""}`}
                           >
                             {c.name}
                           </button>
