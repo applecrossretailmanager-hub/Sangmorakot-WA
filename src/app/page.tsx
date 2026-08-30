@@ -31,14 +31,17 @@ export default function Home() {
       <section className="container-page py-20">
         <div className="grid md:grid-cols-3 gap-6">
           <Feature
+            href="/classes"
             title="Group Classes"
             body="Authentic Muay Thai coaching for beginners through to competitors, every day of the week."
           />
           <Feature
+            href="/personal-training"
             title="Personal Training"
             body="One-on-one sessions with our coaches. Buy a session pack and book straight into their calendar."
           />
           <Feature
+            href="/membership"
             title="Flexible Payment"
             body="Pay by card with automatic direct debit through Stripe, or pay cash in person at the gym."
           />
@@ -60,11 +63,11 @@ export default function Home() {
   );
 }
 
-function Feature({ title, body }: { title: string; body: string }) {
+function Feature({ href, title, body }: { href: string; title: string; body: string }) {
   return (
-    <div className="card">
+    <Link href={href} className="card block hover:border-gold transition-colors">
       <h3 className="font-bold text-lg mb-2 text-gold">{title}</h3>
       <p className="text-muted text-sm leading-relaxed">{body}</p>
-    </div>
+    </Link>
   );
 }
