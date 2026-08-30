@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 
@@ -17,7 +18,19 @@ export default async function PersonalTrainingPage() {
   ]);
 
   return (
-    <div className="container-page py-16">
+    <div>
+      <div className="relative h-56 md:h-72 border-b border-border overflow-hidden">
+        <Image
+          src="/pt-action.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover object-[center_25%]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
+      </div>
+
+      <div className="container-page py-16">
       <div className="max-w-2xl mx-auto text-center mb-12">
         <h1 className="text-4xl font-extrabold mb-4">Personal Training</h1>
         <p className="text-muted">
@@ -32,9 +45,23 @@ export default async function PersonalTrainingPage() {
       {trainers?.length ? (
         <div className="max-w-3xl mx-auto mb-14 grid sm:grid-cols-2 gap-6">
           {trainers.map((t) => (
-            <div key={t.id} className="card">
-              <h3 className="font-bold text-lg text-gold mb-1">{t.name}</h3>
-              {t.bio && <p className="text-sm text-muted">{t.bio}</p>}
+            <div key={t.id} className="card flex items-start gap-4">
+              {t.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={t.photo_url}
+                  alt={t.name}
+                  className="h-16 w-16 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-surface-2 flex items-center justify-center text-gold font-bold text-lg shrink-0">
+                  {t.name.charAt(0)}
+                </div>
+              )}
+              <div>
+                <h3 className="font-bold text-lg text-gold mb-1">{t.name}</h3>
+                {t.bio && <p className="text-sm text-muted">{t.bio}</p>}
+              </div>
             </div>
           ))}
         </div>
@@ -63,6 +90,7 @@ export default async function PersonalTrainingPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

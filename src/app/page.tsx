@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { site } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,8 +15,16 @@ export default async function Home() {
 
   return (
     <div>
-      <section className="border-b border-border bg-gradient-to-b from-surface to-background">
-        <div className="container-page py-24 md:py-32 text-center">
+      <section className="relative overflow-hidden border-b border-border">
+        <Image
+          src="/hero-fight.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover object-[center_30%]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/40" />
+        <div className="relative container-page py-24 md:py-32 text-center">
           <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
             {site.tagline}
           </p>

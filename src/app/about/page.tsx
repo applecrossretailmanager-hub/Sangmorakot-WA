@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { site } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -78,6 +79,21 @@ export default async function AboutPage() {
           </div>
         </div>
       )}
+
+      <div className="mb-16">
+        <h2 className="text-2xl font-bold mb-6">Surasak in the Ring</h2>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-border">
+            <Image src="/gallery/surasak-win-1.jpg" alt="Surasak having his hand raised after a win" fill className="object-cover" />
+          </div>
+          <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-border">
+            <Image src="/gallery/surasak-win-2.jpg" alt="Surasak holding a championship belt" fill className="object-cover" />
+          </div>
+          <div className="relative aspect-[2/3] rounded-xl overflow-hidden border border-border">
+            <Image src="/gallery/surasak-win-3.jpg" alt="Surasak celebrating a win with his corner" fill className="object-cover" />
+          </div>
+        </div>
+      </div>
 
       <div>
         <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
