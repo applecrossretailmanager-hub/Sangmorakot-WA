@@ -10,7 +10,9 @@ export const metadata: Metadata = {
 export default function ReferPage() {
   return (
     <div className="container-page py-16 max-w-xl">
-      <h1 className="text-4xl font-extrabold mb-4">Refer a Friend</h1>
+      <h1 className="font-display uppercase text-4xl md:text-5xl tracking-tight mb-4">
+        Refer a Friend
+      </h1>
       <p className="text-muted mb-10">
         Training is always better with a mate. Bring a friend along and you&rsquo;ll both be
         rewarded.

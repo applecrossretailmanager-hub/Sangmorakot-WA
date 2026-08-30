@@ -40,7 +40,9 @@ export default async function ClassesPage() {
   return (
     <div className="container-page py-16">
       <div className="max-w-2xl mx-auto text-center mb-12">
-        <h1 className="text-4xl font-extrabold mb-4">Class Timetable</h1>
+        <h1 className="font-display uppercase text-4xl md:text-5xl tracking-tight mb-4">
+          Class Timetable
+        </h1>
         <p className="text-muted">
           Our regular weekly schedule — see if our times work for you, then log in to reserve a
           spot. Each class has limited capacity.

@@ -28,8 +28,10 @@ export default async function Home() {
           <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
             {site.tagline}
           </p>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-            Train Muay Thai at <span className="text-primary">Sangmorakot</span>{" "}
+          <h1 className="font-display uppercase leading-[0.95] tracking-tight text-5xl md:text-7xl mb-6">
+            Train Muay Thai
+            <br />
+            at <span className="text-primary">Sangmorakot</span>{" "}
             <span className="text-gold">WA</span>
           </h1>
           <p className="max-w-xl mx-auto text-muted text-lg mb-10">
@@ -79,6 +81,36 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="border-t border-border bg-surface/50">
+        <div className="container-page py-20">
+          <div className="max-w-2xl mx-auto text-center mb-12">
+            <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-3">
+              What We Stand On
+            </p>
+            <h2 className="font-display uppercase text-3xl md:text-4xl tracking-tight">
+              Our Values
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            <ValueCard
+              number="01"
+              title="Respect"
+              body="For your coaches, your training partners, and the art itself. Every round is earned, not given."
+            />
+            <ValueCard
+              number="02"
+              title="Discipline"
+              body="Show up, put in the work, and the progress follows. No shortcuts, no egos on the mats."
+            />
+            <ValueCard
+              number="03"
+              title="Community"
+              body="Train alongside people who push you and have your back — beginners and fighters, side by side."
+            />
+          </div>
+        </div>
+      </section>
+
       {!!testimonials?.length && (
         <section className="container-page pb-20">
           <h2 className="text-2xl font-bold text-center mb-8">What Our Members Say</h2>
@@ -114,5 +146,15 @@ function Feature({ href, title, body }: { href: string; title: string; body: str
       <h3 className="font-bold text-lg mb-2 text-gold">{title}</h3>
       <p className="text-muted text-sm leading-relaxed">{body}</p>
     </Link>
+  );
+}
+
+function ValueCard({ number, title, body }: { number: string; title: string; body: string }) {
+  return (
+    <div className="card">
+      <p className="text-xs text-primary font-medium mb-3">/{number}</p>
+      <h3 className="font-display uppercase text-2xl tracking-tight text-gold mb-2">{title}</h3>
+      <p className="text-muted text-sm leading-relaxed">{body}</p>
+    </div>
   );
 }

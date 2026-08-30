@@ -38,7 +38,9 @@ export default async function AboutPage() {
 
   return (
     <div className="container-page py-16 max-w-3xl">
-      <h1 className="text-4xl font-extrabold mb-6">About {site.shortName}</h1>
+      <h1 className="font-display uppercase text-4xl md:text-5xl tracking-tight mb-6">
+        About {site.shortName}
+      </h1>
       <div className="space-y-4 text-muted leading-relaxed mb-16">
         <p>
           {site.name} is a Muay Thai gym built around traditional coaching, a strong

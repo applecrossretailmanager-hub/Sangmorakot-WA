@@ -21,7 +21,9 @@ export default async function MembershipPage() {
   return (
     <div className="container-page py-16">
       <div className="max-w-2xl mx-auto text-center mb-12">
-        <h1 className="text-4xl font-extrabold mb-4">Membership Plans</h1>
+        <h1 className="font-display uppercase text-4xl md:text-5xl tracking-tight mb-4">
+          Membership Plans
+        </h1>
         <p className="text-muted">
           Pay by card for automatic recurring billing, or choose to pay cash in person at the
           gym — either way you pick the plan online.

@@ -32,7 +32,9 @@ export default async function PersonalTrainingPage() {
 
       <div className="container-page py-16">
       <div className="max-w-2xl mx-auto text-center mb-12">
-        <h1 className="text-4xl font-extrabold mb-4">Personal Training</h1>
+        <h1 className="font-display uppercase text-4xl md:text-5xl tracking-tight mb-4">
+          Personal Training
+        </h1>
         <p className="text-muted">
           Buy a session pack, then book straight into your coach&rsquo;s calendar. Already
           have sessions? Head to your account to book a time.
