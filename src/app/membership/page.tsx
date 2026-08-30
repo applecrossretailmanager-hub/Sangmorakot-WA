@@ -4,7 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { formatMoney, formatInterval } from "@/lib/format";
 import type { Json } from "@/lib/supabase/types";
 
-export const metadata: Metadata = { title: "Membership" };
+export const metadata: Metadata = {
+  title: "Membership",
+  description: "Muay Thai membership plans in WA — pay by card with automatic direct debit, or cash at the gym. Your first class is free.",
+};
 export const revalidate = 0;
 
 export default async function MembershipPage() {

@@ -15,12 +15,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http")
+  ? process.env.NEXT_PUBLIC_SITE_URL
+  : "https://sangmorakotwa.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: `${site.name} | Muay Thai Gym`,
+    default: `${site.name} | Muay Thai Gym in WA`,
     template: `%s | ${site.shortName}`,
   },
-  description: site.tagline,
+  description:
+    "Muay Thai gym in Western Australia. Group classes, memberships, and one-on-one personal training for every level — your first class is free.",
+  keywords: ["Muay Thai", "Perth", "Western Australia", "gym", "kickboxing", "personal training", "martial arts"],
+  openGraph: {
+    title: `${site.name} | Muay Thai Gym in WA`,
+    description: site.tagline,
+    url: siteUrl,
+    siteName: site.name,
+    images: [{ url: "/logo.jpg", width: 512, height: 512 }],
+    locale: "en_AU",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: `${site.name} | Muay Thai Gym in WA`,
+    description: site.tagline,
+    images: ["/logo.jpg"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

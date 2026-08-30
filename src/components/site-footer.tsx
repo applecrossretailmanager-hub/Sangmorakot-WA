@@ -15,6 +15,9 @@ export function SiteFooter() {
           <Link href="/personal-training" className="hover:text-foreground">
             Personal Training
           </Link>
+          <Link href="/refer" className="hover:text-foreground">
+            Refer a Friend
+          </Link>
           <Link href="/contact" className="hover:text-foreground">
             Contact
           </Link>

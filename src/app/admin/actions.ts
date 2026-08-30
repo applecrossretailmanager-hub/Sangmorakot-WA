@@ -347,6 +347,22 @@ export async function deleteTestimonial(id: string) {
   revalidatePath("/");
 }
 
+// ---------- contact messages ----------
+
+export async function markContactMessageRead(id: string, read: boolean) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("contact_messages").update({ read }).eq("id", id);
+  revalidatePath("/admin/site");
+}
+
+export async function deleteContactMessage(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("contact_messages").delete().eq("id", id);
+  revalidatePath("/admin/site");
+}
+
 // ---------- trainer bio/photo ----------
 
 export async function updateTrainerProfile(id: string, formData: FormData) {

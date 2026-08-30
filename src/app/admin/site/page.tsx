@@ -1,17 +1,70 @@
 import { createClient } from "@/lib/supabase/server";
-import { createTestimonial, toggleTestimonialActive, deleteTestimonial } from "../actions";
+import { formatDateTime } from "@/lib/format";
+import {
+  createTestimonial,
+  toggleTestimonialActive,
+  deleteTestimonial,
+  markContactMessageRead,
+  deleteContactMessage,
+} from "../actions";
 
 export const revalidate = 0;
 
 export default async function AdminSitePage() {
   const supabase = await createClient();
-  const { data: testimonials } = await supabase
-    .from("testimonials")
-    .select("*")
-    .order("sort_order");
+  const [{ data: testimonials }, { data: messages }] = await Promise.all([
+    supabase.from("testimonials").select("*").order("sort_order"),
+    supabase.from("contact_messages").select("*").order("created_at", { ascending: false }),
+  ]);
 
   return (
     <div className="space-y-16">
+      <section>
+        <h2 className="text-xl font-bold mb-2">Contact Messages</h2>
+        <p className="text-muted text-sm mb-4">
+          Submissions from the website contact form. Also emailed to you directly.
+        </p>
+        <div className="space-y-3">
+          {messages?.map((m) => (
+            <div key={m.id} className="card">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-medium">
+                    {m.name}{" "}
+                    {!m.read && (
+                      <span className="text-xs text-gold border border-gold rounded px-1.5 py-0.5 ml-1">
+                        New
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm text-muted">
+                    {m.email}
+                    {m.phone ? ` · ${m.phone}` : ""} · {formatDateTime(m.created_at)}
+                  </p>
+                  <p className="text-sm mt-2 whitespace-pre-wrap">{m.message}</p>
+                </div>
+                <div className="flex flex-col gap-2 shrink-0">
+                  <form action={markContactMessageRead.bind(null, m.id, !m.read)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 w-full">
+                      {m.read ? "Mark unread" : "Mark read"}
+                    </button>
+                  </form>
+                  <form action={deleteContactMessage.bind(null, m.id)}>
+                    <button
+                      type="submit"
+                      className="btn-outline text-sm py-1.5 px-3 w-full hover:text-primary"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          ))}
+          {!messages?.length && <p className="text-muted">No messages yet.</p>}
+        </div>
+      </section>
+
       <section>
         <h2 className="text-xl font-bold mb-2">Testimonials</h2>
         <p className="text-muted text-sm mb-4">

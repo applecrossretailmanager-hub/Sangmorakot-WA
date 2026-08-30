@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail, classBookedEmail } from "@/lib/resend";
+import { formatDayHeading } from "@/lib/format";
 
 const bodySchema = z.object({
   scheduleId: z.string().uuid(),
@@ -38,6 +40,23 @@ export async function POST(request: Request) {
   if (error) {
     const message = ERROR_MESSAGES[error.message] ?? "Could not book that class.";
     return NextResponse.json({ error: message }, { status: 400 });
+  }
+
+  if (user.email) {
+    const { data: schedule } = await supabase
+      .from("class_schedule")
+      .select("name, start_time")
+      .eq("id", parsed.data.scheduleId)
+      .single();
+
+    if (schedule) {
+      const whenLabel = `${formatDayHeading(`${parsed.data.classDate}T00:00:00`)} at ${schedule.start_time.slice(0, 5)}`;
+      await sendEmail({
+        to: user.email,
+        subject: `You're booked in — ${schedule.name}`,
+        html: classBookedEmail(schedule.name, whenLabel),
+      });
+    }
   }
 
   return NextResponse.json({ booking: data });

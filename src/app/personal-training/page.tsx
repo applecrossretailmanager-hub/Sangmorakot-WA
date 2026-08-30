@@ -3,7 +3,10 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 
-export const metadata: Metadata = { title: "Personal Training" };
+export const metadata: Metadata = {
+  title: "Personal Training",
+  description: "Book one-on-one Muay Thai personal training with our coaches. Buy a session pack and book straight into their calendar.",
+};
 export const revalidate = 0;
 
 export default async function PersonalTrainingPage() {

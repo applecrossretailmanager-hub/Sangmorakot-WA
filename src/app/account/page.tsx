@@ -209,6 +209,16 @@ export default async function AccountPage() {
           <p className="text-muted">No upcoming classes booked.</p>
         )}
       </section>
+
+      <section className="card flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+        <div>
+          <h2 className="font-bold text-lg text-gold">Know someone who&rsquo;d love it here?</h2>
+          <p className="text-sm text-muted">Refer a friend and you&rsquo;ll both be rewarded.</p>
+        </div>
+        <Link href="/refer" className="btn-outline whitespace-nowrap">
+          Refer a Friend
+        </Link>
+      </section>
     </div>
   );
 }

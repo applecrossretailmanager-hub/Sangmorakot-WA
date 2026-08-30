@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
+import { ContactForm } from "./contact-form";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = {
+  title: "Contact",
+  description: "Get in touch with Sangmorakot WA Muay Thai — questions about classes, membership, or personal training.",
+};
 
 export default function ContactPage() {
   return (
     <div className="container-page py-16 max-w-xl">
       <h1 className="text-4xl font-extrabold mb-6">Contact Us</h1>
-      <div className="card space-y-4">
+
+      <div className="card space-y-4 mb-8">
         <div>
           <p className="text-sm text-muted">Email</p>
           <p className="font-medium">{site.email}</p>
@@ -20,6 +25,9 @@ export default function ContactPage() {
           </p>
         </div>
       </div>
+
+      <h2 className="text-xl font-bold mb-4">Send us a message</h2>
+      <ContactForm />
     </div>
   );
 }

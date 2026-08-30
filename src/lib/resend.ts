@@ -65,3 +65,40 @@ export function membershipPaymentFailedEmail(planName: string) {
     membership active.</p>
   `);
 }
+
+export function classBookedEmail(className: string, whenLabel: string) {
+  return wrapEmail(`
+    <p>You&rsquo;re booked in for <strong>${className}</strong> on <strong>${whenLabel}</strong>.</p>
+    <p>See you on the mats — arrive a few minutes early to warm up.</p>
+  `);
+}
+
+export function classCancelledEmail(className: string, whenLabel: string) {
+  return wrapEmail(`
+    <p>Your booking for <strong>${className}</strong> on <strong>${whenLabel}</strong> has been
+    cancelled. Your spot has been released back to the class.</p>
+  `);
+}
+
+export function contactMessageEmail(params: {
+  name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+}) {
+  return wrapEmail(`
+    <p>New message from the website contact form:</p>
+    <p><strong>Name:</strong> ${escapeHtml(params.name)}<br />
+    <strong>Email:</strong> ${escapeHtml(params.email)}<br />
+    ${params.phone ? `<strong>Phone:</strong> ${escapeHtml(params.phone)}<br />` : ""}</p>
+    <p style="white-space: pre-wrap;">${escapeHtml(params.message)}</p>
+  `);
+}
+
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
