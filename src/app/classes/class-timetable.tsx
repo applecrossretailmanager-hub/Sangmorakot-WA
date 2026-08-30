@@ -57,7 +57,7 @@ export function ClassTimetable({
 
   return (
     <div className="mb-16">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 mb-6">
         {WEEK_ORDER.map((day) => (
           <div key={day} className="card">
             <h3 className="font-semibold text-gold mb-3">{DAY_LABELS_FULL[day]}</h3>
@@ -66,14 +66,19 @@ export function ClassTimetable({
                 <button
                   key={c.id}
                   type="button"
+                  title={c.name}
                   onClick={() => setSelectedId(c.id === selectedId ? null : c.id)}
-                  className={`block w-full text-left rounded-md -mx-1 px-1 py-1.5 transition-colors ${
+                  className={`flex items-baseline gap-2 w-full text-left rounded-md -mx-1 px-1 py-1.5 transition-colors ${
                     c.id === selectedId ? "bg-gold/10 text-gold" : "hover:bg-surface-2"
                   }`}
                 >
-                  <p className="text-sm font-medium">{c.start_time.slice(0, 5)}</p>
-                  <p className="text-sm">{c.name}</p>
-                  {c.trainer?.name && <p className="text-xs text-muted">{c.trainer.name}</p>}
+                  <p className="text-sm font-medium shrink-0">{c.start_time.slice(0, 5)}</p>
+                  <p className="text-sm truncate">
+                    {c.name}
+                    {c.trainer?.name && (
+                      <span className="text-xs text-muted"> · {c.trainer.name}</span>
+                    )}
+                  </p>
                 </button>
               ))}
               {!scheduleByDay.get(day)?.length && <p className="text-sm text-muted">—</p>}
