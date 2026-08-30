@@ -41,7 +41,12 @@ export default async function AdminClassesPage() {
       date: string;
       time: string;
       capacity: number;
-      attendees: { id: string; name: string; checkedInAt: string | null }[];
+      attendees: {
+        id: string;
+        name: string;
+        checkedInAt: string | null;
+        isFreeTrial: boolean;
+      }[];
     }
   >();
   for (const b of roster ?? []) {
@@ -59,6 +64,7 @@ export default async function AdminClassesPage() {
       id: b.id,
       name: b.profile?.full_name ?? "Member",
       checkedInAt: b.checked_in_at,
+      isFreeTrial: b.is_free_trial,
     });
   }
   const occurrences = Array.from(rosterByOccurrence.entries()).sort(([, a], [, b]) =>
@@ -186,7 +192,12 @@ function RosterCard({
     date: string;
     time: string;
     capacity: number;
-    attendees: { id: string; name: string; checkedInAt: string | null }[];
+    attendees: {
+      id: string;
+      name: string;
+      checkedInAt: string | null;
+      isFreeTrial: boolean;
+    }[];
   };
 }) {
   const checkedInCount = o.attendees.filter((a) => a.checkedInAt).length;
@@ -204,7 +215,14 @@ function RosterCard({
       <ul className="text-sm text-muted space-y-1">
         {o.attendees.map((a) => (
           <li key={a.id} className="flex items-center justify-between gap-4">
-            <span className={a.checkedInAt ? "text-gold" : ""}>{a.name}</span>
+            <span className={a.checkedInAt ? "text-gold" : ""}>
+              {a.name}
+              {a.isFreeTrial && (
+                <span className="ml-2 text-xs text-primary border border-primary/40 rounded px-1.5 py-0.5">
+                  First timer
+                </span>
+              )}
+            </span>
             <div className="flex items-center gap-3">
               <form action={toggleClassCheckIn.bind(null, a.id, !a.checkedInAt)}>
                 <button

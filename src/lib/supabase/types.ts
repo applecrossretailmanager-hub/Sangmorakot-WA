@@ -18,6 +18,7 @@ export type Database = {
           class_date: string
           created_at: string
           id: string
+          is_free_trial: boolean
           schedule_id: string
           status: string
           user_id: string
@@ -27,6 +28,7 @@ export type Database = {
           class_date: string
           created_at?: string
           id?: string
+          is_free_trial?: boolean
           schedule_id: string
           status?: string
           user_id: string
@@ -36,6 +38,7 @@ export type Database = {
           class_date?: string
           created_at?: string
           id?: string
+          is_free_trial?: boolean
           schedule_id?: string
           status?: string
           user_id?: string
@@ -296,6 +299,7 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          free_trial_claimed_at: string | null
           full_name: string | null
           id: string
           phone: string | null
@@ -305,6 +309,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          free_trial_claimed_at?: string | null
           full_name?: string | null
           id: string
           phone?: string | null
@@ -314,6 +319,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          free_trial_claimed_at?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -580,6 +586,7 @@ export type Database = {
           class_date: string
           created_at: string
           id: string
+          is_free_trial: boolean
           schedule_id: string
           status: string
           user_id: string
@@ -591,6 +598,7 @@ export type Database = {
           class_date: string
           created_at: string
           id: string
+          is_free_trial: boolean
           schedule_id: string
           status: string
           user_id: string
