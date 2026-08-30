@@ -1,7 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { DAY_LABELS } from "@/lib/days";
 import { formatDayHeading } from "@/lib/format";
-import { createClassSchedule, bulkDeleteClassSchedule, cancelClassBookingAdmin } from "../actions";
+import {
+  createClassSchedule,
+  bulkDeleteClassSchedule,
+  cancelClassBookingAdmin,
+  toggleClassCheckIn,
+} from "../actions";
 import { AdminClassGrid } from "./class-grid";
 
 export const revalidate = 0;
@@ -20,7 +25,9 @@ export default async function AdminClassesPage() {
     supabase.from("pt_trainers").select("*").eq("active", true),
     supabase
       .from("class_bookings")
-      .select("*, profile:profiles(full_name), schedule:class_schedule(name, start_time, capacity)")
+      .select(
+        "*, profile:profiles(full_name), schedule:class_schedule(name, start_time, capacity)",
+      )
       .eq("status", "booked")
       .gte("class_date", todayIso)
       .order("class_date")
@@ -34,7 +41,7 @@ export default async function AdminClassesPage() {
       date: string;
       time: string;
       capacity: number;
-      attendees: { id: string; name: string }[];
+      attendees: { id: string; name: string; checkedInAt: string | null }[];
     }
   >();
   for (const b of roster ?? []) {
@@ -48,16 +55,42 @@ export default async function AdminClassesPage() {
         attendees: [],
       });
     }
-    rosterByOccurrence
-      .get(key)!
-      .attendees.push({ id: b.id, name: b.profile?.full_name ?? "Member" });
+    rosterByOccurrence.get(key)!.attendees.push({
+      id: b.id,
+      name: b.profile?.full_name ?? "Member",
+      checkedInAt: b.checked_in_at,
+    });
   }
   const occurrences = Array.from(rosterByOccurrence.entries()).sort(([, a], [, b]) =>
     a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date),
   );
+  const todaysOccurrences = occurrences.filter(([, o]) => o.date === todayIso);
+  const futureOccurrences = occurrences.filter(([, o]) => o.date !== todayIso);
 
   return (
     <div className="space-y-16">
+      <section>
+        <h2 className="text-xl font-bold mb-4">Today&rsquo;s Classes — Check In</h2>
+        <div className="space-y-3">
+          {todaysOccurrences.map(([key, o]) => (
+            <RosterCard key={key} o={o} />
+          ))}
+          {!todaysOccurrences.length && (
+            <p className="text-muted">No classes booked for today.</p>
+          )}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-bold mb-4">Upcoming Class Rosters</h2>
+        <div className="space-y-3">
+          {futureOccurrences.map(([key, o]) => (
+            <RosterCard key={key} o={o} />
+          ))}
+          {!futureOccurrences.length && <p className="text-muted">No other upcoming class bookings.</p>}
+        </div>
+      </section>
+
       <section>
         <h2 className="text-xl font-bold mb-4">Weekly Timetable</h2>
         <p className="text-muted text-sm mb-4">
@@ -141,37 +174,55 @@ export default async function AdminClassesPage() {
           </form>
         </details>
       </section>
+    </div>
+  );
+}
 
-      <section>
-        <h2 className="text-xl font-bold mb-4">Upcoming Class Rosters</h2>
-        <div className="space-y-3">
-          {occurrences.map(([key, o]) => (
-            <div key={key} className="card">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-medium">
-                  {o.className} — {formatDayHeading(`${o.date}T00:00:00`)} {o.time}
-                </p>
-                <span className="text-sm text-muted">
-                  {o.attendees.length}/{o.capacity} booked
-                </span>
-              </div>
-              <ul className="text-sm text-muted space-y-1">
-                {o.attendees.map((a) => (
-                  <li key={a.id} className="flex items-center justify-between gap-4">
-                    {a.name}
-                    <form action={cancelClassBookingAdmin.bind(null, a.id)}>
-                      <button type="submit" className="text-xs text-muted hover:text-primary">
-                        Remove
-                      </button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
+function RosterCard({
+  o,
+}: {
+  o: {
+    className: string;
+    date: string;
+    time: string;
+    capacity: number;
+    attendees: { id: string; name: string; checkedInAt: string | null }[];
+  };
+}) {
+  const checkedInCount = o.attendees.filter((a) => a.checkedInAt).length;
+  return (
+    <div className="card">
+      <div className="flex items-center justify-between mb-2">
+        <p className="font-medium">
+          {o.className} — {formatDayHeading(`${o.date}T00:00:00`)} {o.time}
+        </p>
+        <span className="text-sm text-muted">
+          {checkedInCount}/{o.attendees.length} checked in · {o.attendees.length}/{o.capacity}{" "}
+          booked
+        </span>
+      </div>
+      <ul className="text-sm text-muted space-y-1">
+        {o.attendees.map((a) => (
+          <li key={a.id} className="flex items-center justify-between gap-4">
+            <span className={a.checkedInAt ? "text-gold" : ""}>{a.name}</span>
+            <div className="flex items-center gap-3">
+              <form action={toggleClassCheckIn.bind(null, a.id, !a.checkedInAt)}>
+                <button
+                  type="submit"
+                  className={`text-xs ${a.checkedInAt ? "text-gold hover:text-muted" : "text-muted hover:text-gold"}`}
+                >
+                  {a.checkedInAt ? "✓ Checked in" : "Check in"}
+                </button>
+              </form>
+              <form action={cancelClassBookingAdmin.bind(null, a.id)}>
+                <button type="submit" className="text-xs text-muted hover:text-primary">
+                  Remove
+                </button>
+              </form>
             </div>
-          ))}
-          {!occurrences.length && <p className="text-muted">No upcoming class bookings.</p>}
-        </div>
-      </section>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatMoney, formatInterval, formatDateTime, formatDayHeading } from "@/lib/format";
 import { ManageBillingButton } from "./manage-billing-button";
 import { CancelBookingButton } from "./cancel-booking-button";
+import { DismissNoticeButton } from "./dismiss-notice-button";
 
 export const metadata: Metadata = { title: "My Account" };
 export const revalidate = 0;
@@ -68,13 +69,16 @@ export default async function AccountPage() {
     0;
 
   const pendingPurchases =
-    purchases?.filter((p) => p.status === "pending" && p.payment_method === "stripe") ?? [];
+    purchases?.filter(
+      (p) => p.status === "pending" && p.payment_method === "stripe" && !p.dismissed_at,
+    ) ?? [];
   const failedPurchases =
     purchases?.filter(
       (p) =>
         p.status === "canceled" &&
         p.payment_method === "stripe" &&
-        isWithinLast30Days(p.created_at),
+        isWithinLast30Days(p.created_at) &&
+        !p.dismissed_at,
     ) ?? [];
 
   return (
@@ -127,13 +131,16 @@ export default async function AccountPage() {
         {!!pendingPurchases.length && (
           <div className="mb-4 space-y-2">
             {pendingPurchases.map((p) => (
-              <p
+              <div
                 key={p.id}
-                className="rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold"
+                className="flex items-center justify-between gap-3 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm text-gold"
               >
-                Payment processing for {p.package?.name} — this can take a few days for bank
-                transfers. We&rsquo;ll add your sessions as soon as it clears.
-              </p>
+                <p>
+                  Payment processing for {p.package?.name} — this can take a few days for bank
+                  transfers. We&rsquo;ll add your sessions as soon as it clears.
+                </p>
+                <DismissNoticeButton purchaseId={p.id} />
+              </div>
             ))}
           </div>
         )}
@@ -141,13 +148,16 @@ export default async function AccountPage() {
         {!!failedPurchases.length && (
           <div className="mb-4 space-y-2">
             {failedPurchases.map((p) => (
-              <p
+              <div
                 key={p.id}
-                className="rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary"
+                className="flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary"
               >
-                Your payment for {p.package?.name} didn&rsquo;t go through. No sessions were
-                added — please try again.
-              </p>
+                <p>
+                  Your payment for {p.package?.name} didn&rsquo;t go through. No sessions were
+                  added — please try again.
+                </p>
+                <DismissNoticeButton purchaseId={p.id} />
+              </div>
             ))}
           </div>
         )}

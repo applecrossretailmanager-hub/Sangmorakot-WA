@@ -4,6 +4,7 @@ import { getCurrentProfile } from "@/lib/auth";
 import { site } from "@/lib/site";
 
 const links = [
+  { href: "/", label: "Home" },
   { href: "/membership", label: "Membership" },
   { href: "/classes", label: "Classes" },
   { href: "/personal-training", label: "Personal Training" },

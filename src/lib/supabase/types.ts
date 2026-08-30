@@ -14,6 +14,7 @@ export type Database = {
     Tables: {
       class_bookings: {
         Row: {
+          checked_in_at: string | null
           class_date: string
           created_at: string
           id: string
@@ -22,6 +23,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          checked_in_at?: string | null
           class_date: string
           created_at?: string
           id?: string
@@ -30,6 +32,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          checked_in_at?: string | null
           class_date?: string
           created_at?: string
           id?: string
@@ -455,6 +458,7 @@ export type Database = {
       pt_purchases: {
         Row: {
           created_at: string
+          dismissed_at: string | null
           id: string
           package_id: string
           payment_method: string
@@ -467,6 +471,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dismissed_at?: string | null
           id?: string
           package_id: string
           payment_method: string
@@ -479,6 +484,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dismissed_at?: string | null
           id?: string
           package_id?: string
           payment_method?: string
@@ -640,6 +646,7 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      dismiss_pt_purchase_notice: { Args: { p_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

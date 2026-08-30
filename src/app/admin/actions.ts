@@ -368,6 +368,16 @@ export async function deleteClassSchedule(id: string) {
   revalidatePath("/classes");
 }
 
+export async function toggleClassCheckIn(id: string, checkedIn: boolean) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase
+    .from("class_bookings")
+    .update({ checked_in_at: checkedIn ? new Date().toISOString() : null })
+    .eq("id", id);
+  revalidatePath("/admin/classes");
+}
+
 export async function cancelClassBookingAdmin(id: string) {
   await requireAdmin();
   const supabase = await createClient();
