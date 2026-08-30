@@ -3,6 +3,8 @@ import { DAY_LABELS } from "@/lib/days";
 import { formatDayHeading } from "@/lib/format";
 import {
   createClassSchedule,
+  updateClassSchedule,
+  bulkDeleteClassSchedule,
   toggleClassScheduleActive,
   deleteClassSchedule,
   cancelClassBookingAdmin,
@@ -64,35 +66,121 @@ export default async function AdminClassesPage() {
     <div className="space-y-16">
       <section>
         <h2 className="text-xl font-bold mb-4">Weekly Timetable</h2>
-        <div className="space-y-2 mb-6">
+        <p className="text-muted text-sm mb-4">
+          Tick classes and use &ldquo;Delete selected&rdquo; below to bulk remove, or expand
+          &ldquo;Edit&rdquo; on a class to change it.
+        </p>
+        <div className="space-y-2 mb-3">
           {schedule?.map((c) => (
-            <div key={c.id} className="card flex flex-wrap items-center justify-between gap-4 py-3">
-              <div>
-                <p className="font-medium">
-                  {c.name} {!c.active && <span className="text-xs text-muted">(hidden)</span>}
-                </p>
-                <p className="text-sm text-muted">
-                  {DAY_LABELS[c.day_of_week]} {c.start_time.slice(0, 5)} · {c.duration_minutes} min ·
-                  max {c.capacity}
-                  {c.trainer?.name ? ` · ${c.trainer.name}` : ""}
-                </p>
+            <div key={c.id} className="card py-3">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <label className="flex items-center gap-3">
+                  <input type="checkbox" name="ids" value={c.id} form="bulk-classes" />
+                  <div>
+                    <p className="font-medium">
+                      {c.name} {!c.active && <span className="text-xs text-muted">(hidden)</span>}
+                    </p>
+                    <p className="text-sm text-muted">
+                      {DAY_LABELS[c.day_of_week]} {c.start_time.slice(0, 5)} · {c.duration_minutes} min ·
+                      max {c.capacity}
+                      {c.trainer?.name ? ` · ${c.trainer.name}` : ""}
+                    </p>
+                  </div>
+                </label>
+                <div className="flex gap-2">
+                  <form action={toggleClassScheduleActive.bind(null, c.id, !c.active)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3">
+                      {c.active ? "Hide" : "Show"}
+                    </button>
+                  </form>
+                  <form action={deleteClassSchedule.bind(null, c.id)}>
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <form action={toggleClassScheduleActive.bind(null, c.id, !c.active)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3">
-                    {c.active ? "Hide" : "Show"}
-                  </button>
+              <details className="mt-3">
+                <summary className="cursor-pointer text-sm text-gold">Edit</summary>
+                <form
+                  action={updateClassSchedule.bind(null, c.id)}
+                  className="mt-4 space-y-3 max-w-lg"
+                >
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Class name</span>
+                    <input name="name" required defaultValue={c.name} className="input" />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Description</span>
+                    <input name="description" defaultValue={c.description ?? ""} className="input" />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Trainer (optional)</span>
+                    <select name="trainer_id" className="input" defaultValue={c.trainer_id ?? ""}>
+                      <option value="">— none —</option>
+                      {trainers?.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Day</span>
+                    <select name="day_of_week" className="input" defaultValue={c.day_of_week}>
+                      {DAY_LABELS.map((label, i) => (
+                        <option key={i} value={i}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm text-muted">Start time</span>
+                      <input
+                        name="start_time"
+                        type="time"
+                        required
+                        defaultValue={c.start_time.slice(0, 5)}
+                        className="input"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-1.5 block text-sm text-muted">Duration (minutes)</span>
+                      <input
+                        name="duration_minutes"
+                        type="number"
+                        min="15"
+                        step="15"
+                        defaultValue={c.duration_minutes}
+                        className="input"
+                      />
+                    </label>
+                  </div>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">Max people per class</span>
+                    <input
+                      name="capacity"
+                      type="number"
+                      min="1"
+                      defaultValue={c.capacity}
+                      className="input"
+                    />
+                  </label>
+                  <button type="submit" className="btn-primary">Save changes</button>
                 </form>
-                <form action={deleteClassSchedule.bind(null, c.id)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
-                    Delete
-                  </button>
-                </form>
-              </div>
+              </details>
             </div>
           ))}
           {!schedule?.length && <p className="text-muted">No classes scheduled yet.</p>}
         </div>
+
+        <form id="bulk-classes" action={bulkDeleteClassSchedule} className="flex justify-end mb-6">
+          <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+            Delete selected
+          </button>
+        </form>
 
         <details className="card">
           <summary className="cursor-pointer font-medium">+ New class</summary>

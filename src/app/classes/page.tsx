@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { formatDayHeading, formatTime } from "@/lib/format";
 import { BookClassButton } from "./book-class-button";
+import { ClassTimetable } from "./class-timetable";
 
 export const metadata: Metadata = { title: "Class Timetable" };
 export const revalidate = 0;
@@ -28,15 +29,6 @@ export default async function ClassesPage() {
     }),
   ]);
 
-  const scheduleByDay = new Map<number, typeof schedule>();
-  for (const c of schedule ?? []) {
-    const list = scheduleByDay.get(c.day_of_week) ?? [];
-    list.push(c);
-    scheduleByDay.set(c.day_of_week, list);
-  }
-  // Show the week starting Monday, which is how most people think about it.
-  const weekOrder = [1, 2, 3, 4, 5, 6, 0];
-
   const byDate = new Map<string, typeof occurrences>();
   for (const o of occurrences ?? []) {
     const list = byDate.get(o.class_date) ?? [];
@@ -58,27 +50,7 @@ export default async function ClassesPage() {
       {!schedule?.length ? (
         <p className="text-center text-muted mb-16">No classes scheduled yet — check back soon.</p>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-16">
-          {weekOrder.map((day) => (
-            <div key={day} className="card">
-              <h3 className="font-semibold text-gold mb-3">{DAY_LABELS_FULL[day]}</h3>
-              <div className="space-y-3">
-                {(scheduleByDay.get(day) ?? []).map((c) => (
-                  <div key={c.id}>
-                    <p className="text-sm font-medium">{c.start_time.slice(0, 5)}</p>
-                    <p className="text-sm text-muted">{c.name}</p>
-                    {c.trainer?.name && (
-                      <p className="text-xs text-muted">{c.trainer.name}</p>
-                    )}
-                  </div>
-                ))}
-                {!scheduleByDay.get(day)?.length && (
-                  <p className="text-sm text-muted">—</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        <ClassTimetable schedule={schedule} occurrences={occurrences ?? []} isLoggedIn={!!user} />
       )}
 
       {!!dates.length && (
@@ -128,13 +100,3 @@ export default async function ClassesPage() {
     </div>
   );
 }
-
-const DAY_LABELS_FULL: Record<number, string> = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-};

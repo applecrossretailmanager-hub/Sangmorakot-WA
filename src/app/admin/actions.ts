@@ -249,6 +249,32 @@ export async function addAvailability(formData: FormData) {
   revalidatePath("/admin/personal-training");
 }
 
+export async function updateAvailability(id: string, formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  await supabase
+    .from("pt_availability")
+    .update({
+      day_of_week: num(formData, "day_of_week") ?? 0,
+      start_time: str(formData, "start_time"),
+      end_time: str(formData, "end_time"),
+      slot_minutes: num(formData, "slot_minutes") ?? 60,
+    })
+    .eq("id", id);
+
+  revalidatePath("/admin/personal-training");
+}
+
+export async function bulkDeleteAvailability(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  if (!ids.length) return;
+  await supabase.from("pt_availability").delete().in("id", ids);
+  revalidatePath("/admin/personal-training");
+}
+
 export async function removeAvailability(id: string) {
   await requireAdmin();
   const supabase = await createClient();
@@ -290,6 +316,37 @@ export async function createClassSchedule(formData: FormData) {
       capacity,
     })),
   );
+  revalidatePath("/admin/classes");
+  revalidatePath("/classes");
+}
+
+export async function updateClassSchedule(id: string, formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  await supabase
+    .from("class_schedule")
+    .update({
+      name: str(formData, "name"),
+      description: str(formData, "description") || null,
+      trainer_id: str(formData, "trainer_id") || null,
+      day_of_week: num(formData, "day_of_week") ?? 0,
+      start_time: str(formData, "start_time"),
+      duration_minutes: num(formData, "duration_minutes") ?? 60,
+      capacity: num(formData, "capacity") ?? 10,
+    })
+    .eq("id", id);
+
+  revalidatePath("/admin/classes");
+  revalidatePath("/classes");
+}
+
+export async function bulkDeleteClassSchedule(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+  const ids = formData.getAll("ids").map(String).filter(Boolean);
+  if (!ids.length) return;
+  await supabase.from("class_schedule").delete().in("id", ids);
   revalidatePath("/admin/classes");
   revalidatePath("/classes");
 }

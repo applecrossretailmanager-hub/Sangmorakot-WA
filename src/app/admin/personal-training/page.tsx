@@ -6,6 +6,8 @@ import {
   toggleTrainerActive,
   updateTrainerProfile,
   addAvailability,
+  updateAvailability,
+  bulkDeleteAvailability,
   removeAvailability,
   cancelBookingAdmin,
 } from "../actions";
@@ -135,8 +137,12 @@ export default async function AdminPersonalTrainingPage() {
 
       <section>
         <h2 className="text-xl font-bold mb-4">Weekly Availability</h2>
+        <p className="text-muted text-sm mb-4">
+          Tick windows and use &ldquo;Delete selected&rdquo; below to bulk remove, or expand
+          &ldquo;Edit&rdquo; on a window to change it.
+        </p>
 
-        <div className="space-y-8 mb-6">
+        <div className="space-y-8 mb-3">
           {trainers?.map((t) => {
             const windows = availabilityByTrainer.get(t.id) ?? [];
             if (!windows.length) return null;
@@ -145,19 +151,75 @@ export default async function AdminPersonalTrainingPage() {
                 <h3 className="font-semibold text-gold mb-2">{t.name}</h3>
                 <div className="space-y-2">
                   {windows.map((a) => (
-                    <div
-                      key={a.id}
-                      className="card flex items-center justify-between gap-4 py-3"
-                    >
-                      <p className="text-sm">
-                        {DAY_LABELS[a.day_of_week]} {a.start_time.slice(0, 5)}–
-                        {a.end_time.slice(0, 5)} ({a.slot_minutes} min slots)
-                      </p>
-                      <form action={removeAvailability.bind(null, a.id)}>
-                        <button type="submit" className="text-sm text-muted hover:text-primary">
-                          Remove
-                        </button>
-                      </form>
+                    <div key={a.id} className="card py-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <label className="flex items-center gap-3">
+                          <input type="checkbox" name="ids" value={a.id} form="bulk-availability" />
+                          <p className="text-sm">
+                            {DAY_LABELS[a.day_of_week]} {a.start_time.slice(0, 5)}–
+                            {a.end_time.slice(0, 5)} ({a.slot_minutes} min slots)
+                          </p>
+                        </label>
+                        <form action={removeAvailability.bind(null, a.id)}>
+                          <button type="submit" className="text-sm text-muted hover:text-primary">
+                            Remove
+                          </button>
+                        </form>
+                      </div>
+                      <details className="mt-3">
+                        <summary className="cursor-pointer text-sm text-gold">Edit</summary>
+                        <form
+                          action={updateAvailability.bind(null, a.id)}
+                          className="mt-4 space-y-3 max-w-lg"
+                        >
+                          <label className="block">
+                            <span className="mb-1.5 block text-sm text-muted">Day</span>
+                            <select name="day_of_week" className="input" defaultValue={a.day_of_week}>
+                              {DAY_LABELS.map((label, i) => (
+                                <option key={i} value={i}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <div className="grid grid-cols-2 gap-3">
+                            <label className="block">
+                              <span className="mb-1.5 block text-sm text-muted">Start time</span>
+                              <input
+                                name="start_time"
+                                type="time"
+                                required
+                                defaultValue={a.start_time.slice(0, 5)}
+                                className="input"
+                              />
+                            </label>
+                            <label className="block">
+                              <span className="mb-1.5 block text-sm text-muted">End time</span>
+                              <input
+                                name="end_time"
+                                type="time"
+                                required
+                                defaultValue={a.end_time.slice(0, 5)}
+                                className="input"
+                              />
+                            </label>
+                          </div>
+                          <label className="block">
+                            <span className="mb-1.5 block text-sm text-muted">
+                              Slot length (minutes)
+                            </span>
+                            <input
+                              name="slot_minutes"
+                              type="number"
+                              min="15"
+                              step="15"
+                              defaultValue={a.slot_minutes}
+                              className="input"
+                            />
+                          </label>
+                          <button type="submit" className="btn-primary">Save changes</button>
+                        </form>
+                      </details>
                     </div>
                   ))}
                 </div>
@@ -166,6 +228,16 @@ export default async function AdminPersonalTrainingPage() {
           })}
           {!availability?.length && <p className="text-muted">No availability windows set.</p>}
         </div>
+
+        <form
+          id="bulk-availability"
+          action={bulkDeleteAvailability}
+          className="flex justify-end mb-6"
+        >
+          <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+            Delete selected
+          </button>
+        </form>
 
         <details className="card">
           <summary className="cursor-pointer font-medium">+ New availability window</summary>
