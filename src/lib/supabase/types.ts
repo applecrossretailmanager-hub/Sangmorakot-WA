@@ -541,6 +541,7 @@ export type Database = {
           id: string
           name: string
           photo_url: string | null
+          title: string | null
         }
         Insert: {
           active?: boolean
@@ -549,6 +550,7 @@ export type Database = {
           id?: string
           name: string
           photo_url?: string | null
+          title?: string | null
         }
         Update: {
           active?: boolean
@@ -557,6 +559,7 @@ export type Database = {
           id?: string
           name?: string
           photo_url?: string | null
+          title?: string | null
         }
         Relationships: []
       }

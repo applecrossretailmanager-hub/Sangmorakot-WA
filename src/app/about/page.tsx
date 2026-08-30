@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { site } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import { bioParagraphs, renderBioLine } from "@/lib/bio";
 
 export const metadata: Metadata = { title: "About" };
 export const revalidate = 0;
@@ -57,25 +58,34 @@ export default async function AboutPage() {
       {!!trainers?.length && (
         <div className="mb-16">
           <h2 className="text-2xl font-bold mb-6">Meet the Coaches</h2>
-          <div className="grid sm:grid-cols-2 gap-6">
+          <div className="space-y-6">
             {trainers.map((t) => (
-              <div key={t.id} className="card flex items-start gap-4">
-                {t.photo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={t.photo_url}
-                    alt={t.name}
-                    className="h-16 w-16 rounded-full object-cover shrink-0"
-                  />
-                ) : (
-                  <div className="h-16 w-16 rounded-full bg-surface-2 flex items-center justify-center text-gold font-bold text-lg shrink-0">
-                    {t.name.charAt(0)}
+              <div key={t.id} className="card">
+                <div className="flex items-center gap-4 mb-4">
+                  {t.photo_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={t.photo_url}
+                      alt={t.name}
+                      className="h-16 w-16 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-full bg-surface-2 flex items-center justify-center text-gold font-bold text-lg shrink-0">
+                      {t.name.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-bold text-gold text-lg">{t.name}</p>
+                    {t.title && <p className="text-sm text-muted">{t.title}</p>}
+                  </div>
+                </div>
+                {t.bio && (
+                  <div className="space-y-3 text-sm text-muted leading-relaxed">
+                    {bioParagraphs(t.bio).map((para, i) => (
+                      <p key={i}>{renderBioLine(para)}</p>
+                    ))}
                   </div>
                 )}
-                <div>
-                  <p className="font-bold text-gold">{t.name}</p>
-                  {t.bio && <p className="text-sm text-muted mt-1">{t.bio}</p>}
-                </div>
               </div>
             ))}
           </div>

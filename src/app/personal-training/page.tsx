@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
+import { bioParagraphs, renderBioLine } from "@/lib/bio";
 
 export const metadata: Metadata = {
   title: "Personal Training",
@@ -46,26 +47,37 @@ export default async function PersonalTrainingPage() {
 
       {trainers?.length ? (
         <div className="max-w-3xl mx-auto mb-14 grid sm:grid-cols-2 gap-6">
-          {trainers.map((t) => (
-            <div key={t.id} className="card flex items-start gap-4">
-              {t.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={t.photo_url}
-                  alt={t.name}
-                  className="h-16 w-16 rounded-full object-cover shrink-0"
-                />
-              ) : (
-                <div className="h-16 w-16 rounded-full bg-surface-2 flex items-center justify-center text-gold font-bold text-lg shrink-0">
-                  {t.name.charAt(0)}
+          {trainers.map((t) => {
+            const paragraphs = t.bio ? bioParagraphs(t.bio) : [];
+            return (
+              <div key={t.id} className="card flex items-start gap-4">
+                {t.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={t.photo_url}
+                    alt={t.name}
+                    className="h-16 w-16 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-surface-2 flex items-center justify-center text-gold font-bold text-lg shrink-0">
+                    {t.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <h3 className="font-bold text-lg text-gold mb-1">{t.name}</h3>
+                  {t.title && <p className="text-xs text-muted mb-1">{t.title}</p>}
+                  {!!paragraphs.length && (
+                    <p className="text-sm text-muted">{renderBioLine(paragraphs[0])}</p>
+                  )}
+                  {paragraphs.length > 1 && (
+                    <Link href="/about" className="text-xs text-gold hover:underline">
+                      More about {t.name} →
+                    </Link>
+                  )}
                 </div>
-              )}
-              <div>
-                <h3 className="font-bold text-lg text-gold mb-1">{t.name}</h3>
-                {t.bio && <p className="text-sm text-muted">{t.bio}</p>}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
 

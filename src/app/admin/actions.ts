@@ -213,6 +213,7 @@ export async function createTrainer(formData: FormData) {
   const supabase = await createClient();
   await supabase.from("pt_trainers").insert({
     name: str(formData, "name"),
+    title: str(formData, "title") || null,
     bio: str(formData, "bio") || null,
   });
   revalidatePath("/admin/personal-training");
@@ -444,6 +445,7 @@ export async function updateTrainerProfile(id: string, formData: FormData) {
   await supabase
     .from("pt_trainers")
     .update({
+      title: str(formData, "title") || null,
       bio: str(formData, "bio") || null,
       photo_url: photoUrl,
     })

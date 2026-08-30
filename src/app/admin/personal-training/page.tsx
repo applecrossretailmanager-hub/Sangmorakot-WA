@@ -70,7 +70,7 @@ export default async function AdminPersonalTrainingPage() {
                   <p className="font-medium">
                     {t.name} {!t.active && <span className="text-xs text-muted">(hidden)</span>}
                   </p>
-                  {t.bio && <p className="text-sm text-muted">{t.bio}</p>}
+                  {t.title && <p className="text-sm text-gold">{t.title}</p>}
                 </div>
                 <form action={toggleTrainerActive.bind(null, t.id, !t.active)}>
                   <button type="submit" className="btn-outline text-sm py-1.5 px-3">
@@ -85,8 +85,20 @@ export default async function AdminPersonalTrainingPage() {
                   className="mt-4 space-y-3 max-w-lg"
                 >
                   <label className="block">
-                    <span className="mb-1.5 block text-sm text-muted">Bio</span>
-                    <textarea name="bio" rows={2} defaultValue={t.bio ?? ""} className="input" />
+                    <span className="mb-1.5 block text-sm text-muted">Title / role</span>
+                    <input
+                      name="title"
+                      defaultValue={t.title ?? ""}
+                      placeholder="Head Coach | Muay Thai"
+                      className="input"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1.5 block text-sm text-muted">
+                      Bio (leave a blank line between paragraphs, wrap **words** in double
+                      asterisks to bold them)
+                    </span>
+                    <textarea name="bio" rows={8} defaultValue={t.bio ?? ""} className="input" />
                   </label>
                   {t.photo_url && (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -127,8 +139,12 @@ export default async function AdminPersonalTrainingPage() {
               <input name="name" required className="input" />
             </label>
             <label className="block">
+              <span className="mb-1.5 block text-sm text-muted">Title / role</span>
+              <input name="title" placeholder="Coach | Muay Thai" className="input" />
+            </label>
+            <label className="block">
               <span className="mb-1.5 block text-sm text-muted">Bio</span>
-              <textarea name="bio" rows={2} className="input" />
+              <textarea name="bio" rows={4} className="input" />
             </label>
             <button type="submit" className="btn-primary">Add trainer</button>
           </form>
