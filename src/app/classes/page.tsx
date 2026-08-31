@@ -1,40 +1,60 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
-import { formatDayHeading, formatTime } from "@/lib/format";
-import { BookClassButton } from "./book-class-button";
-import { ClassTimetable } from "./class-timetable";
+import { MonthCalendar } from "./month-calendar";
 
 export const metadata: Metadata = { title: "Class Timetable" };
 export const revalidate = 0;
 
-export default async function ClassesPage() {
+function parseMonthParam(param?: string) {
+  if (param && /^\d{4}-\d{2}$/.test(param)) {
+    const [y, m] = param.split("-").map(Number);
+    return new Date(y, m - 1, 1);
+  }
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+function toMonthParam(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function toDateKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export default async function ClassesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
+  const { month: monthParam } = await searchParams;
   const supabase = await createClient();
   const user = await getCurrentUser();
 
-  const from = new Date();
-  const to = new Date();
-  to.setDate(to.getDate() + 14);
+  const monthStart = parseMonthParam(monthParam);
+  const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+
+  // Monday-first grid covering every full week the month touches.
+  const gridStart = new Date(monthStart);
+  gridStart.setDate(gridStart.getDate() - ((gridStart.getDay() + 6) % 7));
+  const gridEnd = new Date(monthEnd);
+  gridEnd.setDate(gridEnd.getDate() + (6 - ((gridEnd.getDay() + 6) % 7)));
+
+  const fromIso = toDateKey(gridStart);
+  const toIso = toDateKey(gridEnd);
 
   const [{ data: schedule }, { data: occurrences }, { data: myBookings }] = await Promise.all([
-    supabase
-      .from("class_schedule")
-      .select("*, trainer:pt_trainers(name)")
-      .eq("active", true)
-      .order("day_of_week")
-      .order("start_time"),
-    supabase.rpc("get_class_occurrences", {
-      p_from: from.toISOString().slice(0, 10),
-      p_to: to.toISOString().slice(0, 10),
-    }),
+    supabase.from("class_schedule").select("id").eq("active", true).limit(1),
+    supabase.rpc("get_class_occurrences", { p_from: fromIso, p_to: toIso }),
     user
       ? supabase
           .from("class_bookings")
           .select("id, schedule_id, class_date")
           .eq("user_id", user.id)
           .eq("status", "booked")
-          .gte("class_date", from.toISOString().slice(0, 10))
-          .lte("class_date", to.toISOString().slice(0, 10))
+          .gte("class_date", fromIso)
+          .lte("class_date", toIso)
       : Promise.resolve({ data: null }),
   ]);
 
@@ -43,13 +63,13 @@ export default async function ClassesPage() {
     myBookingIds[`${b.schedule_id}_${b.class_date}`] = b.id;
   }
 
-  const byDate = new Map<string, typeof occurrences>();
-  for (const o of occurrences ?? []) {
-    const list = byDate.get(o.class_date) ?? [];
-    list.push(o);
-    byDate.set(o.class_date, list);
+  const days: string[] = [];
+  for (let d = new Date(gridStart); d <= gridEnd; d.setDate(d.getDate() + 1)) {
+    days.push(toDateKey(d));
   }
-  const dates = Array.from(byDate.entries());
+
+  const prevMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() - 1, 1);
+  const nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
 
   return (
     <div className="container-page py-16">
@@ -58,66 +78,23 @@ export default async function ClassesPage() {
           Class Timetable
         </h1>
         <p className="text-muted">
-          Our regular weekly schedule — see if our times work for you, then log in to reserve a
-          spot. Each class has limited capacity.
+          Browse a full month, see live spots left, and log in to book any class.
         </p>
       </div>
 
       {!schedule?.length ? (
-        <p className="text-center text-muted mb-16">No classes scheduled yet — check back soon.</p>
+        <p className="text-center text-muted">No classes scheduled yet — check back soon.</p>
       ) : (
-        <ClassTimetable
-          schedule={schedule}
+        <MonthCalendar
+          monthLabel={monthStart.toLocaleDateString("en-AU", { month: "long", year: "numeric" })}
+          monthParam={toMonthParam(monthStart)}
+          prevMonthParam={toMonthParam(prevMonth)}
+          nextMonthParam={toMonthParam(nextMonth)}
+          days={days}
           occurrences={occurrences ?? []}
           isLoggedIn={!!user}
           myBookingIds={myBookingIds}
         />
-      )}
-
-      {!!dates.length && (
-        <>
-          <h2 className="text-2xl font-bold text-center mb-8">Book a Spot</h2>
-          <div className="max-w-3xl mx-auto space-y-8">
-            {dates.map(([date, classes]) => (
-              <div key={date}>
-                <h3 className="font-semibold text-lg mb-3">
-                  {formatDayHeading(`${date}T00:00:00`)}
-                </h3>
-                <div className="space-y-2">
-                  {classes!.map((c) => {
-                    const spotsLeft = c.capacity - c.booked_count;
-                    const full = spotsLeft <= 0;
-                    return (
-                      <div
-                        key={`${c.schedule_id}_${c.class_date}`}
-                        className="card flex flex-wrap items-center justify-between gap-4 py-3"
-                      >
-                        <div>
-                          <p className="font-medium">
-                            {formatTime(c.start_at)} — {c.name}
-                          </p>
-                          <p className="text-sm text-muted">
-                            {c.trainer_name ? `${c.trainer_name} · ` : ""}
-                            {full ? "Full" : `${spotsLeft} spot${spotsLeft === 1 ? "" : "s"} left`}
-                            {" "}
-                            ({c.booked_count}/{c.capacity})
-                          </p>
-                        </div>
-                        <BookClassButton
-                          scheduleId={c.schedule_id}
-                          classDate={c.class_date}
-                          full={full}
-                          isLoggedIn={!!user}
-                          initialBookingId={myBookingIds[`${c.schedule_id}_${c.class_date}`]}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
       )}
     </div>
   );
