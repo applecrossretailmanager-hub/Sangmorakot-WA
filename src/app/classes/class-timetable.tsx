@@ -9,6 +9,7 @@ type ScheduleItem = {
   name: string;
   start_time: string;
   day_of_week: number;
+  duration_minutes: number;
   trainer: { name: string } | null;
 };
 
@@ -29,6 +30,7 @@ const DAY_LABELS_SHORT: Record<number, string> = {
   6: "Sat",
 };
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const HOUR_PX = 64;
 
 // Cycled by first-seen class name so each class type gets a consistent color
 // across the grid and the legend, however many class types end up existing.
@@ -44,6 +46,41 @@ function useTypeColors(schedule: ScheduleItem[]) {
   const map = new Map<string, (typeof TYPE_COLORS)[number]>();
   names.forEach((name, i) => map.set(name, TYPE_COLORS[i % TYPE_COLORS.length]));
   return map;
+}
+
+function timeToMinutes(t: string) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function formatHour(h: number) {
+  const period = h < 12 || h === 24 ? "am" : "pm";
+  let hour12 = h % 12;
+  if (hour12 === 0) hour12 = 12;
+  return `${hour12}${period}`;
+}
+
+/** Simple greedy lane packing so overlapping classes on the same day sit
+ * side by side instead of stacking on top of each other. */
+function layoutDay(classes: ScheduleItem[]) {
+  const sorted = [...classes].sort(
+    (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
+  );
+  const laneEnds: number[] = [];
+  const placed: { item: ScheduleItem; lane: number }[] = [];
+  for (const c of sorted) {
+    const start = timeToMinutes(c.start_time);
+    const end = start + c.duration_minutes;
+    let lane = laneEnds.findIndex((laneEnd) => laneEnd <= start);
+    if (lane === -1) {
+      lane = laneEnds.length;
+      laneEnds.push(end);
+    } else {
+      laneEnds[lane] = end;
+    }
+    placed.push({ item: c, lane });
+  }
+  return { placed, totalLanes: laneEnds.length || 1 };
 }
 
 export function ClassTimetable({
@@ -63,16 +100,26 @@ export function ClassTimetable({
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }
 
-  const times = Array.from(new Set(schedule.map((c) => c.start_time))).sort();
   const typeColors = useTypeColors(schedule);
 
-  const byCell = new Map<string, ScheduleItem[]>();
+  const scheduleByDay = new Map<number, ScheduleItem[]>();
   for (const c of schedule) {
-    const key = `${c.day_of_week}_${c.start_time}`;
-    const list = byCell.get(key) ?? [];
+    const list = scheduleByDay.get(c.day_of_week) ?? [];
     list.push(c);
-    byCell.set(key, list);
+    scheduleByDay.set(c.day_of_week, list);
   }
+
+  const allMinutes = schedule.flatMap((c) => {
+    const start = timeToMinutes(c.start_time);
+    return [start, start + c.duration_minutes];
+  });
+  const minMinutes = allMinutes.length ? Math.min(...allMinutes) : 9 * 60;
+  const maxMinutes = allMinutes.length ? Math.max(...allMinutes) : 17 * 60;
+  const dayStart = Math.floor(minMinutes / 60) * 60;
+  const dayEnd = Math.max(Math.ceil(maxMinutes / 60) * 60, dayStart + 60);
+  const hours: number[] = [];
+  for (let h = dayStart / 60; h <= dayEnd / 60; h++) hours.push(h);
+  const totalHeight = ((dayEnd - dayStart) / 60) * HOUR_PX;
 
   const selected = selectedIds
     .map((id) => schedule.find((c) => c.id === id))
@@ -90,54 +137,72 @@ export function ClassTimetable({
       </div>
 
       <div className="scroll-dark overflow-x-auto rounded-xl border border-border">
-        <table className="w-full table-fixed border-collapse text-sm">
-          <thead>
-            <tr>
-              <th className="bg-surface border-b border-r border-border px-2 py-3 text-left text-xs text-muted font-medium w-14 sm:w-20">
-                Time
-              </th>
-              {WEEK_ORDER.map((day) => (
-                <th
-                  key={day}
-                  className="border-b border-border px-1.5 sm:px-3 py-3 text-gold font-semibold whitespace-nowrap"
+        <div className="flex" style={{ minWidth: `${56 + WEEK_ORDER.length * 120}px` }}>
+          <div className="w-14 shrink-0 border-r border-border bg-surface">
+            <div className="h-10 border-b border-border" />
+            <div className="relative" style={{ height: totalHeight }}>
+              {hours.map((h) => (
+                <div
+                  key={h}
+                  className="absolute left-0 right-1 -translate-y-1/2 text-right text-[10px] text-muted"
+                  style={{ top: ((h * 60 - dayStart) / 60) * HOUR_PX }}
                 >
-                  {DAY_LABELS_SHORT[day]}
-                </th>
+                  {formatHour(h)}
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {times.map((time) => (
-              <tr key={time}>
-                <td className="bg-surface border-r border-b border-border px-2 py-2 text-xs font-medium text-muted whitespace-nowrap">
-                  {time.slice(0, 5)}
-                </td>
-                {WEEK_ORDER.map((day) => {
-                  const classes = byCell.get(`${day}_${time}`) ?? [];
-                  return (
-                    <td key={day} className="border-b border-border p-1 sm:p-1.5 align-top">
-                      <div className="flex flex-col gap-1">
-                        {classes.map((c) => (
-                          <button
-                            key={c.id}
-                            type="button"
-                            title={c.name}
-                            onClick={() => toggle(c.id)}
-                            className={`w-full rounded-md px-1.5 sm:px-2.5 py-2 sm:py-3 text-left text-[11px] sm:text-sm leading-tight font-medium transition-colors ${
-                              typeColors.get(c.name)?.cell ?? "bg-surface-2 hover:bg-gold/20"
-                            } ${selectedIds.includes(c.id) ? "ring-2 ring-foreground" : ""}`}
-                          >
-                            {c.name}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+            </div>
+          </div>
+
+          {WEEK_ORDER.map((day) => {
+            const { placed, totalLanes } = layoutDay(scheduleByDay.get(day) ?? []);
+            return (
+              <div key={day} className="flex-1 min-w-[110px] border-r border-border last:border-r-0">
+                <div className="h-10 border-b border-border flex items-center justify-center text-gold font-semibold text-sm">
+                  {DAY_LABELS_SHORT[day]}
+                </div>
+                <div className="relative" style={{ height: totalHeight }}>
+                  {hours.map((h) => (
+                    <div
+                      key={h}
+                      className="absolute left-0 right-0 border-t border-border/40"
+                      style={{ top: ((h * 60 - dayStart) / 60) * HOUR_PX }}
+                    />
+                  ))}
+                  {placed.map(({ item, lane }) => {
+                    const start = timeToMinutes(item.start_time);
+                    const top = ((start - dayStart) / 60) * HOUR_PX;
+                    const height = Math.max((item.duration_minutes / 60) * HOUR_PX - 2, 26);
+                    const widthPct = 100 / totalLanes;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        title={item.name}
+                        onClick={() => toggle(item.id)}
+                        className={`absolute overflow-hidden rounded-md px-1.5 py-1 text-left text-[10px] sm:text-xs leading-tight font-medium transition-colors ${
+                          typeColors.get(item.name)?.cell ?? "bg-surface-2"
+                        } ${selectedIds.includes(item.id) ? "ring-2 ring-foreground" : ""}`}
+                        style={{
+                          top,
+                          height,
+                          left: `calc(${lane * widthPct}% + 2px)`,
+                          width: `calc(${widthPct}% - 4px)`,
+                        }}
+                      >
+                        <div className="font-semibold truncate">{item.name}</div>
+                        {height >= 40 && (
+                          <div className="opacity-80 truncate">
+                            {item.start_time.slice(0, 5)}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
       <p className="text-center text-xs text-muted mt-3 mb-6">
         Tap classes above to see spots left — select more than one to compare
