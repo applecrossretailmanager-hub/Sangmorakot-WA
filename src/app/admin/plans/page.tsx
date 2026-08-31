@@ -10,6 +10,7 @@ import {
   updatePackage,
   togglePackageActive,
   deletePackage,
+  updatePaymentSettings,
 } from "../actions";
 
 export const revalidate = 0;
@@ -20,13 +21,45 @@ function featuresToLines(features: Json) {
 
 export default async function AdminPlansPage() {
   const supabase = await createClient();
-  const [{ data: plans }, { data: packages }] = await Promise.all([
+  const [{ data: plans }, { data: packages }, { data: paymentSettings }] = await Promise.all([
     supabase.from("membership_plans").select("*").order("sort_order"),
     supabase.from("pt_packages").select("*").order("sort_order"),
+    supabase.from("payment_settings").select("*").eq("id", true).single(),
   ]);
 
   return (
     <div className="space-y-16">
+      <section>
+        <h2 className="text-xl font-bold mb-2">Payment Methods</h2>
+        <p className="text-muted text-sm mb-4">
+          Cash is always available. Turn card and/or bank debit on once Stripe is switched to
+          live mode — until then, leave both off and members can only pay cash.
+        </p>
+        <form action={updatePaymentSettings} className="card max-w-md space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="card_enabled"
+              defaultChecked={paymentSettings?.card_enabled ?? false}
+              className="accent-gold h-4 w-4"
+            />
+            <span>Card payments</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="becs_enabled"
+              defaultChecked={paymentSettings?.becs_enabled ?? false}
+              className="accent-gold h-4 w-4"
+            />
+            <span>Bank debit (BECS Direct Debit)</span>
+          </label>
+          <button type="submit" className="btn-primary">
+            Save
+          </button>
+        </form>
+      </section>
+
       <section>
         <h2 className="text-xl font-bold mb-4">Membership Plans</h2>
         <div className="space-y-3 mb-8">

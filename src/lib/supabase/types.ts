@@ -137,6 +137,27 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_settings: {
+        Row: {
+          becs_enabled: boolean
+          card_enabled: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          becs_enabled?: boolean
+          card_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          becs_enabled?: boolean
+          card_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       membership_plans: {
         Row: {
           active: boolean

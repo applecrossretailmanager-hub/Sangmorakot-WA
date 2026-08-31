@@ -3,11 +3,26 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function BuyActions({ packageId }: { packageId: string }) {
+export function BuyActions({
+  packageId,
+  cardEnabled,
+  becsEnabled,
+}: {
+  packageId: string;
+  cardEnabled: boolean;
+  becsEnabled: boolean;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState<"card" | "cash" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cashDone, setCashDone] = useState(false);
+  const showCardButton = cardEnabled || becsEnabled;
+  const cardLabel =
+    cardEnabled && becsEnabled
+      ? "Pay by card or bank debit"
+      : becsEnabled
+        ? "Pay by bank debit"
+        : "Pay by card";
 
   async function payByCard() {
     setLoading("card");
@@ -58,9 +73,11 @@ export function BuyActions({ packageId }: { packageId: string }) {
 
   return (
     <div className="space-y-4">
-      <button onClick={payByCard} disabled={!!loading} className="btn-primary w-full">
-        {loading === "card" ? "Redirecting to Stripe…" : "Pay by card"}
-      </button>
+      {showCardButton && (
+        <button onClick={payByCard} disabled={!!loading} className="btn-primary w-full">
+          {loading === "card" ? "Redirecting to Stripe…" : cardLabel}
+        </button>
+      )}
       <button onClick={payByCash} disabled={!!loading} className="btn-outline w-full">
         {loading === "cash" ? "Setting up…" : "Pay cash at the gym"}
       </button>

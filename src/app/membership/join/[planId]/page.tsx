@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney, formatInterval } from "@/lib/format";
+import { getPaymentSettings } from "@/lib/payment-settings";
 import { JoinActions } from "./join-actions";
 
 export default async function JoinPlanPage({
@@ -26,6 +27,8 @@ export default async function JoinPlanPage({
 
   if (!plan) notFound();
 
+  const { cardEnabled, becsEnabled } = await getPaymentSettings();
+
   return (
     <div className="container-page py-16 max-w-lg">
       <h1 className="text-3xl font-bold mb-2">Join {plan.name}</h1>
@@ -34,7 +37,7 @@ export default async function JoinPlanPage({
         {formatInterval(plan.interval, plan.interval_count)}
       </p>
 
-      <JoinActions planId={plan.id} />
+      <JoinActions planId={plan.id} cardEnabled={cardEnabled} becsEnabled={becsEnabled} />
     </div>
   );
 }

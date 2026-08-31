@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { formatMoney } from "@/lib/format";
+import { getPaymentSettings } from "@/lib/payment-settings";
 import { BuyActions } from "./buy-actions";
 
 export default async function BuyPackagePage({
@@ -26,6 +27,8 @@ export default async function BuyPackagePage({
 
   if (!pkg) notFound();
 
+  const { cardEnabled, becsEnabled } = await getPaymentSettings();
+
   return (
     <div className="container-page py-16 max-w-lg">
       <h1 className="text-3xl font-bold mb-2">Buy {pkg.name}</h1>
@@ -34,7 +37,7 @@ export default async function BuyPackagePage({
         {pkg.session_count > 1 ? "s" : ""}
       </p>
 
-      <BuyActions packageId={pkg.id} />
+      <BuyActions packageId={pkg.id} cardEnabled={cardEnabled} becsEnabled={becsEnabled} />
     </div>
   );
 }

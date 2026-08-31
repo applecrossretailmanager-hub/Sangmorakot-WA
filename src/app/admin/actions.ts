@@ -134,6 +134,25 @@ export async function deletePackage(id: string) {
   revalidatePath("/personal-training");
 }
 
+// ---------- payment settings ----------
+
+export async function updatePaymentSettings(formData: FormData) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase
+    .from("payment_settings")
+    .update({
+      card_enabled: formData.get("card_enabled") === "on",
+      becs_enabled: formData.get("becs_enabled") === "on",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", true);
+
+  revalidatePath("/admin/plans");
+  revalidatePath("/membership/join/[planId]", "page");
+  revalidatePath("/personal-training/buy/[packageId]", "page");
+}
+
 // ---------- members & payments ----------
 
 export async function markMembershipPaid(id: string) {

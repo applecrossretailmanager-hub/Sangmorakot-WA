@@ -3,11 +3,26 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function JoinActions({ planId }: { planId: string }) {
+export function JoinActions({
+  planId,
+  cardEnabled,
+  becsEnabled,
+}: {
+  planId: string;
+  cardEnabled: boolean;
+  becsEnabled: boolean;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState<"card" | "cash" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cashDone, setCashDone] = useState(false);
+  const showCardButton = cardEnabled || becsEnabled;
+  const cardLabel =
+    cardEnabled && becsEnabled
+      ? "Pay by card or bank debit"
+      : becsEnabled
+        ? "Pay by bank debit (auto direct debit)"
+        : "Pay by card (auto direct debit)";
 
   async function payByCard() {
     setLoading("card");
@@ -58,17 +73,21 @@ export function JoinActions({ planId }: { planId: string }) {
 
   return (
     <div className="space-y-4">
-      <button onClick={payByCard} disabled={!!loading} className="btn-primary w-full">
-        {loading === "card" ? "Redirecting to Stripe…" : "Pay by card (auto direct debit)"}
-      </button>
+      {showCardButton && (
+        <button onClick={payByCard} disabled={!!loading} className="btn-primary w-full">
+          {loading === "card" ? "Redirecting to Stripe…" : cardLabel}
+        </button>
+      )}
       <button onClick={payByCash} disabled={!!loading} className="btn-outline w-full">
         {loading === "cash" ? "Setting up…" : "Pay cash at the gym"}
       </button>
       {error && <p className="text-sm text-primary">{error}</p>}
-      <p className="text-xs text-muted">
-        Card payments are billed automatically each period via Stripe. Cash memberships are
-        activated by staff once payment is received in person.
-      </p>
+      {showCardButton && (
+        <p className="text-xs text-muted">
+          Card payments are billed automatically each period via Stripe. Cash memberships are
+          activated by staff once payment is received in person.
+        </p>
+      )}
     </div>
   );
 }
