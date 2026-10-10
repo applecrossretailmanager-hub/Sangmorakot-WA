@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/auth";
 
 function num(formData: FormData, key: string) {
@@ -12,6 +13,113 @@ function num(formData: FormData, key: string) {
 function str(formData: FormData, key: string) {
   const v = formData.get(key);
   return typeof v === "string" ? v.trim() : "";
+}
+
+// ---------- front desk (walk-in check-in & cash payments) ----------
+
+export async function adminCheckInWalkIn(userId: string, scheduleId: string, classDate: string) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  await admin.from("class_bookings").upsert(
+    {
+      user_id: userId,
+      schedule_id: scheduleId,
+      class_date: classDate,
+      status: "booked",
+      checked_in_at: new Date().toISOString(),
+    },
+    { onConflict: "schedule_id,class_date,user_id" },
+  );
+  revalidatePath("/admin/checkin");
+  revalidatePath("/admin/classes");
+}
+
+export async function adminRecordCashMembership(userId: string, formData: FormData) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const planId = str(formData, "plan_id");
+  if (!planId) return;
+
+  const { data: existing } = await admin
+    .from("memberships")
+    .select("id")
+    .eq("user_id", userId)
+    .in("status", ["active", "pending_cash", "past_due"])
+    .limit(1)
+    .maybeSingle();
+  if (existing) return;
+
+  const { data: plan } = await admin
+    .from("membership_plans")
+    .select("*")
+    .eq("id", planId)
+    .single();
+  if (!plan) return;
+
+  const { data: membership } = await admin
+    .from("memberships")
+    .insert({
+      user_id: userId,
+      plan_id: planId,
+      status: "active",
+      payment_method: "cash",
+    })
+    .select()
+    .single();
+
+  if (membership) {
+    await admin.from("payments").insert({
+      user_id: userId,
+      type: "membership",
+      reference_id: membership.id,
+      amount_cents: plan.price_cents,
+      currency: plan.currency?.toUpperCase() ?? "AUD",
+      method: "cash",
+      status: "succeeded",
+    });
+  }
+
+  revalidatePath("/admin/checkin");
+  revalidatePath("/admin/members");
+}
+
+export async function adminRecordCashPtPackage(userId: string, formData: FormData) {
+  await requireAdmin();
+  const admin = createAdminClient();
+  const packageId = str(formData, "package_id");
+  if (!packageId) return;
+
+  const { data: pkg } = await admin.from("pt_packages").select("*").eq("id", packageId).single();
+  if (!pkg) return;
+
+  const { data: purchase } = await admin
+    .from("pt_purchases")
+    .insert({
+      user_id: userId,
+      package_id: packageId,
+      payment_method: "cash",
+      status: "paid",
+      sessions_total: pkg.session_count,
+      sessions_remaining: pkg.session_count,
+    })
+    .select()
+    .single();
+
+  if (purchase) {
+    await admin.from("payments").insert({
+      user_id: userId,
+      type: "pt_package",
+      reference_id: purchase.id,
+      amount_cents: pkg.price_cents,
+      currency: pkg.currency?.toUpperCase() ?? "AUD",
+      method: "cash",
+      status: "succeeded",
+    });
+  }
+
+  revalidatePath("/admin/checkin");
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/personal-training");
 }
 
 // ---------- membership plans ----------

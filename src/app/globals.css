@@ -54,6 +54,25 @@ body {
   padding-inline: 1.25rem;
 }
 
+/* Admin back-office area uses a light theme instead of the public site's
+   dark one — easier to scan tables/forms at a glance. Overriding these
+   custom properties re-themes every existing card, input, and button
+   utility automatically, since they all resolve through these tokens. */
+.theme-admin {
+  --background: #f4f3f1;
+  --surface: #ffffff;
+  --surface-2: #ece9e4;
+  --border: #ddd8d0;
+  --foreground: #1c1c1b;
+  --muted: #6b6560;
+  --primary: #c8102e;
+  --primary-hover: #a80d26;
+  --gold: #96710a;
+  background: var(--background);
+  color: var(--foreground);
+  min-height: 100%;
+}
+
 @layer components {
   .input {
     @apply w-full rounded-md border border-border bg-surface px-3 py-2 text-foreground placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-gold;
