@@ -75,8 +75,8 @@ export default async function Home() {
           />
           <Feature
             href="/membership"
-            title="Flexible Payment"
-            body="Pay by card with automatic direct debit through Stripe, or pay cash in person at the gym."
+            title="Flexible Memberships"
+            body="Casual drop-ins, unlimited weekly or monthly, and multi-month options — pick what suits your training."
           />
         </div>
       </section>
