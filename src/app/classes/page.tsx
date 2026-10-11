@@ -27,9 +27,10 @@ function toDateKey(d: Date) {
 export default async function ClassesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string }>;
+  searchParams: Promise<{ month?: string; book?: string }>;
 }) {
-  const { month: monthParam } = await searchParams;
+  const { month: monthParam, book: bookParam } = await searchParams;
+  const autoBookKeys = bookParam ? bookParam.split(",").filter(Boolean) : [];
   const supabase = await createClient();
   const user = await getCurrentUser();
 
@@ -112,6 +113,7 @@ export default async function ClassesPage({
           occurrences={occurrences ?? []}
           isLoggedIn={!!user}
           myBookingIds={myBookingIds}
+          autoBookKeys={autoBookKeys}
         />
       )}
     </div>

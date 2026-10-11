@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDayHeading, formatTime } from "@/lib/format";
@@ -47,6 +47,7 @@ export function MonthCalendar({
   occurrences,
   isLoggedIn,
   myBookingIds,
+  autoBookKeys,
 }: {
   monthLabel: string;
   monthParam: string;
@@ -56,11 +57,13 @@ export function MonthCalendar({
   occurrences: Occurrence[];
   isLoggedIn: boolean;
   myBookingIds: Record<string, string>;
+  autoBookKeys: string[];
 }) {
   const router = useRouter();
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>(autoBookKeys);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
+  const hasAutoBooked = useRef(false);
 
   function toggle(key: string) {
     setSelectedKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -111,6 +114,22 @@ export function MonthCalendar({
     setBulkLoading(false);
     router.refresh();
   }
+
+  useEffect(() => {
+    if (hasAutoBooked.current || !isLoggedIn || !autoBookKeys.length) return;
+    hasAutoBooked.current = true;
+    (async () => {
+      if (bookable.length) {
+        await bookAll();
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.delete("book");
+      router.replace(url.pathname + url.search);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, autoBookKeys]);
+
+  const nextTarget = `/classes?month=${monthParam}&book=${encodeURIComponent(selectedKeys.join(","))}`;
 
   return (
     <div className="mb-16 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8">
@@ -247,6 +266,24 @@ export function MonthCalendar({
                 </button>
               )}
               {bulkError && <p className="text-xs text-danger">{bulkError}</p>}
+
+              {!isLoggedIn && (
+                <div className="pt-1">
+                  <Link
+                    href={`/signup?next=${encodeURIComponent(nextTarget)}`}
+                    className="btn-primary w-full text-sm py-2 text-center block"
+                  >
+                    Sign Up to Book All ({selected.length})
+                  </Link>
+                  <p className="text-xs text-muted text-center mt-2">
+                    Already a member?{" "}
+                    <Link href={`/login?next=${encodeURIComponent(nextTarget)}`} className="text-gold hover:underline">
+                      Log in
+                    </Link>{" "}
+                    to book
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export function BookClassButton({
@@ -23,19 +22,7 @@ export function BookClassButton({
   const [bookingId, setBookingId] = useState<string | null>(initialBookingId ?? null);
 
   if (!isLoggedIn) {
-    return (
-      <div className="text-right">
-        <Link href={`/signup?next=${encodeURIComponent("/classes")}`} className="btn-primary text-sm py-1.5 px-3">
-          Sign up to book
-        </Link>
-        <p className="text-xs text-muted mt-1">
-          Already a member?{" "}
-          <Link href={`/login?next=${encodeURIComponent("/classes")}`} className="text-gold hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
-    );
+    return null;
   }
 
   if (bookingId) {
