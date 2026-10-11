@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { markMembershipPaid, cancelMembership, setMemberRole } from "../actions";
+import { markMembershipPaid, cancelMembership, archiveMembership, setMemberRole } from "../actions";
 
 export const revalidate = 0;
 
@@ -36,6 +36,7 @@ export default async function AdminMembersPage() {
     supabase
       .from("memberships")
       .select("*, profile:profiles(full_name, phone), plan:membership_plans(name, price_cents, currency)")
+      .is("archived_at", null)
       .order("created_at", { ascending: false })
       .limit(100),
     supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(100),
@@ -100,6 +101,13 @@ export default async function AdminMembersPage() {
                         <form action={cancelMembership.bind(null, m.id)}>
                           <button type="submit" className="btn-outline text-xs py-1 px-2 hover:text-danger">
                             Cancel
+                          </button>
+                        </form>
+                      )}
+                      {m.status === "canceled" && (
+                        <form action={archiveMembership.bind(null, m.id)}>
+                          <button type="submit" className="btn-outline text-xs py-1 px-2 text-muted hover:text-danger">
+                            Remove
                           </button>
                         </form>
                       )}

@@ -198,6 +198,7 @@ export type Database = {
       }
       memberships: {
         Row: {
+          archived_at: string | null
           cancel_at_period_end: boolean
           created_at: string
           current_period_end: string | null
@@ -211,6 +212,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          archived_at?: string | null
           cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
@@ -224,6 +226,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          archived_at?: string | null
           cancel_at_period_end?: boolean
           created_at?: string
           current_period_end?: string | null
@@ -277,6 +280,7 @@ export type Database = {
       payments: {
         Row: {
           amount_cents: number
+          archived_at: string | null
           created_at: string
           currency: string
           id: string
@@ -290,6 +294,7 @@ export type Database = {
         }
         Insert: {
           amount_cents: number
+          archived_at?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -303,6 +308,7 @@ export type Database = {
         }
         Update: {
           amount_cents?: number
+          archived_at?: string | null
           created_at?: string
           currency?: string
           id?: string

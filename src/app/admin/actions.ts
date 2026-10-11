@@ -362,6 +362,26 @@ export async function markClassBookingPaid(bookingId: string) {
   revalidatePath("/admin/classes");
 }
 
+// ---------- archiving stale records ----------
+// We can't reliably delete rows outright, so "Remove" just hides a stale
+// or mistaken record (an old cancelled membership, a test payment) from
+// the admin lists. The underlying row — and the real financial history —
+// stays intact.
+
+export async function archiveMembership(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("memberships").update({ archived_at: new Date().toISOString() }).eq("id", id);
+  revalidatePath("/admin/members");
+}
+
+export async function archivePayment(id: string) {
+  await requireAdmin();
+  const supabase = await createClient();
+  await supabase.from("payments").update({ archived_at: new Date().toISOString() }).eq("id", id);
+  revalidatePath("/admin/payments");
+}
+
 // ---------- trainers & availability ----------
 
 export async function createTrainer(formData: FormData) {

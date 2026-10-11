@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
-import { markMembershipPaid, markPtPurchasePaid, markClassBookingPaid } from "../actions";
+import { markMembershipPaid, markPtPurchasePaid, markClassBookingPaid, archivePayment } from "../actions";
 
 export const revalidate = 0;
 
@@ -42,6 +42,7 @@ export default async function AdminPaymentsPage() {
         .from("memberships")
         .select("*, profile:profiles(full_name, phone), plan:membership_plans(name, price_cents, currency)")
         .eq("status", "pending_cash")
+        .is("archived_at", null)
         .order("created_at", { ascending: false }),
       supabase
         .from("pt_purchases")
@@ -58,6 +59,7 @@ export default async function AdminPaymentsPage() {
       supabase
         .from("payments")
         .select("*, profile:profiles!payments_user_id_fkey(full_name)")
+        .is("archived_at", null)
         .order("created_at", { ascending: false })
         .limit(150),
     ]);
@@ -190,6 +192,7 @@ export default async function AdminPaymentsPage() {
                 <th className="py-2 pr-4">Amount</th>
                 <th className="py-2 pr-4">Method</th>
                 <th className="py-2 pr-4">Status</th>
+                <th className="py-2 pr-4"></th>
               </tr>
             </thead>
             <tbody>
@@ -205,11 +208,18 @@ export default async function AdminPaymentsPage() {
                       {p.status}
                     </span>
                   </td>
+                  <td className="py-3 pr-4 text-right">
+                    <form action={archivePayment.bind(null, p.id)}>
+                      <button type="submit" className="text-xs text-muted hover:text-danger">
+                        Remove
+                      </button>
+                    </form>
+                  </td>
                 </tr>
               ))}
               {!payments?.length && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-muted">
+                  <td colSpan={7} className="py-6 text-center text-muted">
                     No payments recorded yet.
                   </td>
                 </tr>
