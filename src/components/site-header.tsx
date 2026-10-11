@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getCurrentProfile } from "@/lib/auth";
 import { site } from "@/lib/site";
 import { SignOutButton } from "./sign-out-button";
+import { MobileNav } from "./mobile-nav";
 
 const links = [
   { href: "/", label: "Home" },
@@ -17,7 +18,7 @@ export async function SiteHeader() {
   const profile = await getCurrentProfile();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur relative">
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2 font-bold tracking-wide">
           <Image
@@ -76,23 +77,9 @@ export async function SiteHeader() {
               </Link>
             </>
           )}
+          <MobileNav links={links} profile={profile ? { role: profile.role } : null} />
         </div>
       </div>
-      <nav className="md:hidden flex items-center gap-4 overflow-x-auto px-4 pb-3 text-sm text-muted">
-        {links.map((l) => (
-          <Link key={l.href} href={l.href} className="whitespace-nowrap hover:text-foreground">
-            {l.label}
-          </Link>
-        ))}
-        {profile?.role === "admin" && (
-          <Link href="/admin" className="whitespace-nowrap text-gold hover:text-foreground">
-            Admin
-          </Link>
-        )}
-        {profile && (
-          <SignOutButton className="whitespace-nowrap hover:text-foreground" />
-        )}
-      </nav>
       <span className="sr-only">{site.name}</span>
     </header>
   );
