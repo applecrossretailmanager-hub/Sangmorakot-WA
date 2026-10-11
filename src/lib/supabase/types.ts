@@ -602,24 +602,39 @@ export type Database = {
         Row: {
           accepted_at: string
           created_at: string
+          emergency_contact_name: string
+          emergency_contact_phone: string
+          emergency_contact_relationship: string
           full_name: string
           id: string
+          injuries: string
+          medical_conditions: string
           user_id: string
           version: string
         }
         Insert: {
           accepted_at?: string
           created_at?: string
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
           full_name: string
           id?: string
+          injuries?: string
+          medical_conditions?: string
           user_id: string
           version?: string
         }
         Update: {
           accepted_at?: string
           created_at?: string
+          emergency_contact_name?: string
+          emergency_contact_phone?: string
+          emergency_contact_relationship?: string
           full_name?: string
           id?: string
+          injuries?: string
+          medical_conditions?: string
           user_id?: string
           version?: string
         }

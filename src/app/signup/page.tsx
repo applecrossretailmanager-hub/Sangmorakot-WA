@@ -15,6 +15,11 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emergencyContactName, setEmergencyContactName] = useState("");
+  const [emergencyContactPhone, setEmergencyContactPhone] = useState("");
+  const [emergencyContactRelationship, setEmergencyContactRelationship] = useState("");
+  const [medicalConditions, setMedicalConditions] = useState("");
+  const [injuries, setInjuries] = useState("");
   const [agreedToWaiver, setAgreedToWaiver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +40,11 @@ export default function SignupPage() {
           phone,
           waiver_version: WAIVER_VERSION,
           waiver_accepted_at: new Date().toISOString(),
+          emergency_contact_name: emergencyContactName,
+          emergency_contact_phone: emergencyContactPhone,
+          emergency_contact_relationship: emergencyContactRelationship,
+          medical_conditions: medicalConditions,
+          injuries,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
@@ -114,6 +124,70 @@ export default function SignupPage() {
             autoComplete="new-password"
           />
         </Field>
+
+        <div className="pt-2">
+          <h2 className="text-sm font-semibold text-gold mb-1">Emergency Contact</h2>
+          <p className="text-xs text-muted mb-3">
+            Someone we can call if you&rsquo;re injured during a class or session.
+          </p>
+          <div className="space-y-4">
+            <Field label="Emergency contact name">
+              <input
+                required
+                value={emergencyContactName}
+                onChange={(e) => setEmergencyContactName(e.target.value)}
+                className="input"
+                autoComplete="name"
+              />
+            </Field>
+            <Field label="Emergency contact phone">
+              <input
+                required
+                value={emergencyContactPhone}
+                onChange={(e) => setEmergencyContactPhone(e.target.value)}
+                className="input"
+                autoComplete="tel"
+              />
+            </Field>
+            <Field label="Relationship to you">
+              <input
+                required
+                placeholder="e.g. Partner, Parent, Friend"
+                value={emergencyContactRelationship}
+                onChange={(e) => setEmergencyContactRelationship(e.target.value)}
+                className="input"
+              />
+            </Field>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <h2 className="text-sm font-semibold text-gold mb-1">Health Information</h2>
+          <p className="text-xs text-muted mb-3">
+            So instructors know how to train with you safely. Write &ldquo;None&rdquo; if not
+            applicable.
+          </p>
+          <div className="space-y-4">
+            <Field label="Medical conditions, allergies or medications">
+              <textarea
+                required
+                rows={2}
+                value={medicalConditions}
+                onChange={(e) => setMedicalConditions(e.target.value)}
+                className="input resize-y"
+              />
+            </Field>
+            <Field label="Current injuries or physical limitations">
+              <textarea
+                required
+                rows={2}
+                value={injuries}
+                onChange={(e) => setInjuries(e.target.value)}
+                className="input resize-y"
+              />
+            </Field>
+          </div>
+        </div>
 
         <div>
           <details className="rounded-md border border-border bg-surface mb-3">

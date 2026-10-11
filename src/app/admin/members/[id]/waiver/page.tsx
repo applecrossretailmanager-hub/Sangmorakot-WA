@@ -54,7 +54,34 @@ export default async function AdminMemberWaiverPage({
         </dl>
       </div>
 
+      <div className="card mb-6">
+        <h2 className="font-semibold mb-3">Emergency Contact</h2>
+        <dl className="grid grid-cols-2 gap-y-2 text-sm">
+          <dt className="text-muted">Name</dt>
+          <dd>{waiver.emergency_contact_name || "—"}</dd>
+          <dt className="text-muted">Phone</dt>
+          <dd>{waiver.emergency_contact_phone || "—"}</dd>
+          <dt className="text-muted">Relationship</dt>
+          <dd>{waiver.emergency_contact_relationship || "—"}</dd>
+        </dl>
+      </div>
+
+      <div className="card mb-6">
+        <h2 className="font-semibold mb-3">Health Information</h2>
+        <dl className="space-y-3 text-sm">
+          <div>
+            <dt className="text-muted mb-1">Medical conditions, allergies or medications</dt>
+            <dd className="whitespace-pre-line">{waiver.medical_conditions || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-muted mb-1">Current injuries or physical limitations</dt>
+            <dd className="whitespace-pre-line">{waiver.injuries || "—"}</dd>
+          </div>
+        </dl>
+      </div>
+
       <div className="card">
+        <h2 className="font-semibold mb-3">Terms &amp; Conditions / Liability Waiver</h2>
         <p className="text-sm whitespace-pre-line leading-relaxed">{waiverText}</p>
       </div>
     </div>
