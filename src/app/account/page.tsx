@@ -35,35 +35,48 @@ export default async function AccountPage() {
   const user = await requireUser();
   const supabase = await createClient();
 
-  const [{ data: membership }, { data: purchases }, { data: bookings }, { data: classBookings }] =
-    await Promise.all([
-      supabase
-        .from("memberships")
-        .select("*, plan:membership_plans(*)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      supabase
-        .from("pt_purchases")
-        .select("*, package:pt_packages(name)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("pt_bookings")
-        .select("*, trainer:pt_trainers(name)")
-        .eq("user_id", user.id)
-        .eq("status", "booked")
-        .gt("start_at", new Date().toISOString())
-        .order("start_at"),
-      supabase
-        .from("class_bookings")
-        .select("*, schedule:class_schedule(name, start_time)")
-        .eq("user_id", user.id)
-        .eq("status", "booked")
-        .gte("class_date", new Date().toISOString().slice(0, 10))
-        .order("class_date"),
-    ]);
+  const [
+    { data: membership },
+    { data: purchases },
+    { data: bookings },
+    { data: classBookings },
+    { data: unpaidClassBookings },
+  ] = await Promise.all([
+    supabase
+      .from("memberships")
+      .select("*, plan:membership_plans(*)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("pt_purchases")
+      .select("*, package:pt_packages(name)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("pt_bookings")
+      .select("*, trainer:pt_trainers(name)")
+      .eq("user_id", user.id)
+      .eq("status", "booked")
+      .gt("start_at", new Date().toISOString())
+      .order("start_at"),
+    supabase
+      .from("class_bookings")
+      .select("*, schedule:class_schedule(name, start_time)")
+      .eq("user_id", user.id)
+      .eq("status", "booked")
+      .gte("class_date", new Date().toISOString().slice(0, 10))
+      .order("class_date"),
+    supabase
+      .from("class_bookings")
+      .select("*, schedule:class_schedule(name)")
+      .eq("user_id", user.id)
+      .eq("status", "booked")
+      .eq("requires_payment", true)
+      .is("paid_at", null)
+      .order("class_date"),
+  ]);
 
   const sessionsRemaining =
     purchases?.filter((p) => p.status === "paid").reduce((s, p) => s + p.sessions_remaining, 0) ??
@@ -82,6 +95,9 @@ export default async function AccountPage() {
         !p.dismissed_at,
     ) ?? [];
 
+  const totalOwedCents = unpaidClassBookings?.reduce((s, b) => s + (b.amount_due_cents ?? 0), 0) ?? 0;
+  const owedCurrency = unpaidClassBookings?.[0]?.currency ?? "AUD";
+
   return (
     <div className="container-page py-16 max-w-3xl space-y-8">
       <div className="flex items-start justify-between gap-4">
@@ -91,6 +107,32 @@ export default async function AccountPage() {
         </div>
         <SignOutButton className="rounded-md border border-border px-3 py-1.5 text-sm hover:border-gold hover:text-gold transition-colors whitespace-nowrap" />
       </div>
+
+      {!!unpaidClassBookings?.length && (
+        <section className="card border-danger/40 bg-danger/5">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-bold text-lg text-danger">What You Owe</h2>
+            <span className="text-lg font-bold text-danger">
+              {formatMoney(totalOwedCents, owedCurrency)}
+            </span>
+          </div>
+          <p className="text-sm text-muted mb-3">
+            Casual class bookings not covered by a membership — please pay in cash next time you&rsquo;re in.
+          </p>
+          <ul className="divide-y divide-border">
+            {unpaidClassBookings.map((b) => (
+              <li key={b.id} className="py-2 flex items-center justify-between gap-4 text-sm">
+                <span>
+                  {b.schedule?.name ?? "Class"} — {formatDayHeading(`${b.class_date}T00:00:00`)}
+                </span>
+                <span className="font-medium text-danger">
+                  {formatMoney(b.amount_due_cents ?? 0, b.currency ?? "AUD")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card">
         <h2 className="font-bold text-lg mb-4">Membership</h2>

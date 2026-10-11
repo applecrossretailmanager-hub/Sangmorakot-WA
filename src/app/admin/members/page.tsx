@@ -1,13 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { formatMoney } from "@/lib/format";
-import {
-  markMembershipPaid,
-  cancelMembership,
-  markPtPurchasePaid,
-  markClassBookingPaid,
-  setMemberRole,
-} from "../actions";
+import { markMembershipPaid, cancelMembership, setMemberRole } from "../actions";
 
 export const revalidate = 0;
 
@@ -27,12 +20,6 @@ const STATUS_COLOR: Record<string, string> = {
   incomplete: "text-danger",
 };
 
-const PAYMENT_TYPE_LABEL: Record<string, string> = {
-  membership: "Membership",
-  pt_package: "PT Package",
-  class: "Class",
-};
-
 function formatDate(iso: string | null) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("en-AU", {
@@ -42,107 +29,26 @@ function formatDate(iso: string | null) {
   });
 }
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("en-AU", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 export default async function AdminMembersPage() {
   const supabase = await createClient();
 
-  const [
-    { data: memberships },
-    { data: pendingPurchases },
-    { data: unpaidClassBookings },
-    { data: profiles },
-    { data: payments },
-    { data: waivers },
-  ] = await Promise.all([
+  const [{ data: memberships }, { data: profiles }, { data: waivers }] = await Promise.all([
     supabase
       .from("memberships")
       .select("*, profile:profiles(full_name, phone), plan:membership_plans(name, price_cents, currency)")
       .order("created_at", { ascending: false })
       .limit(100),
-    supabase
-      .from("pt_purchases")
-      .select("*, profile:profiles(full_name), package:pt_packages(name, price_cents, currency)")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("class_bookings")
-      .select("*, profile:profiles(full_name, phone), schedule:class_schedule(name)")
-      .eq("requires_payment", true)
-      .is("paid_at", null)
-      .eq("status", "booked")
-      .order("class_date", { ascending: true }),
     supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(100),
-    supabase
-      .from("payments")
-      .select("*, profile:profiles!payments_user_id_fkey(full_name)")
-      .order("created_at", { ascending: false })
-      .limit(150),
     supabase.from("waivers").select("user_id, accepted_at"),
   ]);
 
   const waiverByUserId = new Map(waivers?.map((w) => [w.user_id, w.accepted_at]) ?? []);
-
-  const paymentsDueCount = (pendingPurchases?.length ?? 0) + (unpaidClassBookings?.length ?? 0);
 
   const attentionCount =
     memberships?.filter((m) => m.status === "pending_cash" || m.status === "past_due").length ?? 0;
 
   return (
     <div className="space-y-16">
-      {!!paymentsDueCount && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Payments Due</h2>
-            <span className="text-sm text-danger font-medium">
-              {paymentsDueCount} payment{paymentsDueCount === 1 ? "" : "s"} to collect
-            </span>
-          </div>
-          <div className="space-y-3">
-            {pendingPurchases?.map((p) => (
-              <div key={`pt_${p.id}`} className="card flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium">{p.profile?.full_name ?? "Member"}</p>
-                  <p className="text-sm text-muted">
-                    PT package — {p.package?.name} —{" "}
-                    {formatMoney(p.package?.price_cents ?? 0, p.package?.currency?.toUpperCase())}
-                  </p>
-                </div>
-                <form action={markPtPurchasePaid.bind(null, p.id)}>
-                  <button type="submit" className="btn-primary text-sm py-1.5 px-3">
-                    Mark cash received
-                  </button>
-                </form>
-              </div>
-            ))}
-            {unpaidClassBookings?.map((b) => (
-              <div key={`class_${b.id}`} className="card flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium">{b.profile?.full_name ?? "Member"}</p>
-                  <p className="text-sm text-muted">
-                    Class — {b.schedule?.name} on {formatDate(b.class_date)} —{" "}
-                    {formatMoney(b.amount_due_cents ?? 0, b.currency ?? "AUD")}
-                  </p>
-                </div>
-                <form action={markClassBookingPaid.bind(null, b.id)}>
-                  <button type="submit" className="btn-primary text-sm py-1.5 px-3">
-                    Mark cash received
-                  </button>
-                </form>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Memberships</h2>
@@ -205,47 +111,6 @@ export default async function AdminMembersPage() {
                 <tr>
                   <td colSpan={6} className="py-6 text-center text-muted">
                     No memberships yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-bold mb-4">Payment History</h2>
-        <div className="scroll-dark overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted border-b border-border">
-                <th className="py-2 pr-4">Date</th>
-                <th className="py-2 pr-4">Member</th>
-                <th className="py-2 pr-4">Type</th>
-                <th className="py-2 pr-4">Amount</th>
-                <th className="py-2 pr-4">Method</th>
-                <th className="py-2 pr-4">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments?.map((p) => (
-                <tr key={p.id} className="border-b border-border/60">
-                  <td className="py-3 pr-4 text-muted">{formatDateTime(p.created_at)}</td>
-                  <td className="py-3 pr-4">{p.profile?.full_name ?? "—"}</td>
-                  <td className="py-3 pr-4">{PAYMENT_TYPE_LABEL[p.type] ?? p.type}</td>
-                  <td className="py-3 pr-4">{formatMoney(p.amount_cents, p.currency)}</td>
-                  <td className="py-3 pr-4 capitalize">{p.method}</td>
-                  <td className="py-3 pr-4 capitalize">
-                    <span className={p.status === "succeeded" ? "text-gold" : "text-danger"}>
-                      {p.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {!payments?.length && (
-                <tr>
-                  <td colSpan={6} className="py-6 text-center text-muted">
-                    No payments recorded yet.
                   </td>
                 </tr>
               )}
