@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCurrentProfile } from "@/lib/auth";
 import { site } from "@/lib/site";
+import { SignOutButton } from "./sign-out-button";
 
 const links = [
   { href: "/", label: "Home" },
@@ -57,6 +58,7 @@ export async function SiteHeader() {
               >
                 My Account
               </Link>
+              <SignOutButton className="hidden sm:inline text-sm text-muted hover:text-foreground transition-colors" />
             </>
           ) : (
             <>
@@ -86,6 +88,9 @@ export async function SiteHeader() {
           <Link href="/admin" className="whitespace-nowrap text-gold hover:text-foreground">
             Admin
           </Link>
+        )}
+        {profile && (
+          <SignOutButton className="whitespace-nowrap hover:text-foreground" />
         )}
       </nav>
       <span className="sr-only">{site.name}</span>

@@ -6,6 +6,7 @@ import { formatMoney, formatInterval, formatDateTime, formatDayHeading } from "@
 import { ManageBillingButton } from "./manage-billing-button";
 import { CancelBookingButton } from "./cancel-booking-button";
 import { DismissNoticeButton } from "./dismiss-notice-button";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export const metadata: Metadata = { title: "My Account" };
 export const revalidate = 0;
@@ -83,9 +84,12 @@ export default async function AccountPage() {
 
   return (
     <div className="container-page py-16 max-w-3xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-1">My Account</h1>
-        <p className="text-muted">{user.email}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">My Account</h1>
+          <p className="text-muted">{user.email}</p>
+        </div>
+        <SignOutButton className="rounded-md border border-border px-3 py-1.5 text-sm hover:border-gold hover:text-gold transition-colors whitespace-nowrap" />
       </div>
 
       <section className="card">
