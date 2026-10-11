@@ -14,10 +14,10 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   active: "text-gold",
-  pending_cash: "text-primary font-medium",
-  past_due: "text-primary font-medium",
+  pending_cash: "text-danger font-medium",
+  past_due: "text-danger font-medium",
   canceled: "text-muted",
-  incomplete: "text-primary",
+  incomplete: "text-danger",
 };
 
 const PAYMENT_TYPE_LABEL: Record<string, string> = {
@@ -100,7 +100,7 @@ export default async function AdminMembersPage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Memberships</h2>
           {attentionCount > 0 && (
-            <span className="text-sm text-primary font-medium">
+            <span className="text-sm text-danger font-medium">
               {attentionCount} need{attentionCount === 1 ? "s" : ""} attention
             </span>
           )}
@@ -145,7 +145,7 @@ export default async function AdminMembersPage() {
                       )}
                       {m.status !== "canceled" && (
                         <form action={cancelMembership.bind(null, m.id)}>
-                          <button type="submit" className="btn-outline text-xs py-1 px-2 hover:text-primary">
+                          <button type="submit" className="btn-outline text-xs py-1 px-2 hover:text-danger">
                             Cancel
                           </button>
                         </form>
@@ -189,7 +189,7 @@ export default async function AdminMembersPage() {
                   <td className="py-3 pr-4">{formatMoney(p.amount_cents, p.currency)}</td>
                   <td className="py-3 pr-4 capitalize">{p.method}</td>
                   <td className="py-3 pr-4 capitalize">
-                    <span className={p.status === "succeeded" ? "text-gold" : "text-primary"}>
+                    <span className={p.status === "succeeded" ? "text-gold" : "text-danger"}>
                       {p.status}
                     </span>
                   </td>

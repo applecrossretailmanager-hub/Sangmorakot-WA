@@ -106,7 +106,7 @@ export default async function AdminClassesPage() {
         <AdminClassGrid schedule={schedule ?? []} trainers={trainers ?? []} />
 
         <form id="bulk-classes" action={bulkDeleteClassSchedule} className="flex justify-end mb-6">
-          <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+          <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-danger">
             Delete selected
           </button>
         </form>
@@ -218,7 +218,7 @@ function RosterCard({
             <span className={a.checkedInAt ? "text-gold" : ""}>
               {a.name}
               {a.isFreeTrial && (
-                <span className="ml-2 text-xs text-primary border border-primary/40 rounded px-1.5 py-0.5">
+                <span className="ml-2 text-xs text-gold border border-gold/40 rounded px-1.5 py-0.5">
                   First timer
                 </span>
               )}
@@ -233,7 +233,7 @@ function RosterCard({
                 </button>
               </form>
               <form action={cancelClassBookingAdmin.bind(null, a.id)}>
-                <button type="submit" className="text-xs text-muted hover:text-primary">
+                <button type="submit" className="text-xs text-muted hover:text-danger">
                   Remove
                 </button>
               </form>

@@ -112,7 +112,7 @@ export function ContactForm() {
 
       {SITE_KEY && <div ref={widgetRef} />}
 
-      {error && <p className="text-sm text-primary">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <button
         type="submit"

@@ -22,9 +22,9 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_COLOR: Record<string, string> = {
   active: "text-gold",
   pending_cash: "text-muted",
-  past_due: "text-primary",
+  past_due: "text-danger",
   canceled: "text-muted",
-  incomplete: "text-primary",
+  incomplete: "text-danger",
 };
 
 function isWithinLast30Days(iso: string) {
@@ -154,7 +154,7 @@ export default async function AccountPage() {
             {failedPurchases.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary"
+                className="flex items-center justify-between gap-3 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger"
               >
                 <p>
                   Your payment for {p.package?.name} didn&rsquo;t go through. No sessions were

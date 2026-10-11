@@ -83,7 +83,7 @@ export default async function AdminPlansPage() {
                     </button>
                   </form>
                   <form action={deletePlan.bind(null, plan.id)}>
-                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-danger">
                       Delete
                     </button>
                   </form>
@@ -221,7 +221,7 @@ export default async function AdminPlansPage() {
                     </button>
                   </form>
                   <form action={deletePackage.bind(null, pkg.id)}>
-                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+                    <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-danger">
                       Delete
                     </button>
                   </form>

@@ -31,7 +31,7 @@ export default async function Home() {
           <h1 className="font-display uppercase leading-[0.95] tracking-tight text-5xl md:text-7xl mb-6">
             Train Muay Thai
             <br />
-            at <span className="text-primary">Sangmorakot</span>{" "}
+            at <span className="text-primary-text">Sangmorakot</span>{" "}
             <span className="text-gold">WA</span>
           </h1>
           <p className="max-w-xl mx-auto text-muted text-lg mb-10">
@@ -152,7 +152,7 @@ function Feature({ href, title, body }: { href: string; title: string; body: str
 function ValueCard({ number, title, body }: { number: string; title: string; body: string }) {
   return (
     <div className="card">
-      <p className="text-xs text-primary font-medium mb-3">/{number}</p>
+      <p className="text-xs text-primary-text font-medium mb-3">/{number}</p>
       <h3 className="font-display uppercase text-2xl tracking-tight text-gold mb-2">{title}</h3>
       <p className="text-muted text-sm leading-relaxed">{body}</p>
     </div>

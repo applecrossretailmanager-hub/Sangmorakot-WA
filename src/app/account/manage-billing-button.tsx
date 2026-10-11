@@ -24,7 +24,7 @@ export function ManageBillingButton() {
       <button onClick={onClick} disabled={loading} className="btn-outline">
         {loading ? "Opening…" : "Manage billing"}
       </button>
-      {error && <p className="mt-2 text-sm text-primary">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
     </div>
   );
 }

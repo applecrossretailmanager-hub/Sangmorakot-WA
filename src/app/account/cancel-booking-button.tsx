@@ -39,11 +39,11 @@ export function CancelBookingButton({
       <button
         onClick={onClick}
         disabled={loading}
-        className="text-sm text-muted hover:text-primary transition-colors"
+        className="text-sm text-muted hover:text-danger transition-colors"
       >
         {loading ? "Cancelling…" : "Cancel"}
       </button>
-      {error && <p className="text-xs text-primary mt-1">{error}</p>}
+      {error && <p className="text-xs text-danger mt-1">{error}</p>}
     </div>
   );
 }

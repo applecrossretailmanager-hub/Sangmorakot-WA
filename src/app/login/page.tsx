@@ -66,7 +66,7 @@ export default function LoginPage() {
           />
         </label>
 
-        {error && <p className="text-sm text-primary">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <button type="submit" disabled={loading} className="btn-primary w-full">
           {loading ? "Logging in…" : "Log in"}

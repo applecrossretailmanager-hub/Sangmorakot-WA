@@ -118,7 +118,7 @@ export function BookingCalendar({ trainers }: { trainers: Tables<"pt_trainers">[
           </a>
         </p>
       )}
-      {error && <p className="mb-6 text-sm text-primary">{error}</p>}
+      {error && <p className="mb-6 text-sm text-danger">{error}</p>}
 
       {loading ? (
         <p className="text-muted">Loading available times…</p>

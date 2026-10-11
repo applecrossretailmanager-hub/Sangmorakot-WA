@@ -50,7 +50,7 @@ export default async function AdminPersonalTrainingPage() {
                 </p>
               </div>
               <form action={cancelBookingAdmin.bind(null, b.id)}>
-                <button type="submit" className="text-sm text-muted hover:text-primary">
+                <button type="submit" className="text-sm text-muted hover:text-danger">
                   Cancel
                 </button>
               </form>
@@ -177,7 +177,7 @@ export default async function AdminPersonalTrainingPage() {
                           </p>
                         </label>
                         <form action={removeAvailability.bind(null, a.id)}>
-                          <button type="submit" className="text-sm text-muted hover:text-primary">
+                          <button type="submit" className="text-sm text-muted hover:text-danger">
                             Remove
                           </button>
                         </form>
@@ -250,7 +250,7 @@ export default async function AdminPersonalTrainingPage() {
           action={bulkDeleteAvailability}
           className="flex justify-end mb-6"
         >
-          <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+          <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-danger">
             Delete selected
           </button>
         </form>

@@ -9,7 +9,10 @@
   --muted: #a3a0a0;
   --primary: #65701d;
   --primary-hover: #7a8c22;
+  --primary-text: #b8c830;
   --gold: #f0d000;
+  --danger: #c8102e;
+  --danger-hover: #e0122f;
 }
 
 @theme inline {
@@ -21,7 +24,10 @@
   --color-muted: var(--muted);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-text: var(--primary-text);
   --color-gold: var(--gold);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-display: var(--font-anton);
@@ -67,7 +73,10 @@ body {
   --muted: #6b6560;
   --primary: #65701d;
   --primary-hover: #4e5717;
+  --primary-text: #65701d;
   --gold: #96710a;
+  --danger: #c8102e;
+  --danger-hover: #a80d26;
   background: var(--background);
   color: var(--foreground);
   min-height: 100%;

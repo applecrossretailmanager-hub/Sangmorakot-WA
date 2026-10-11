@@ -81,7 +81,7 @@ export function BuyActions({
       <button onClick={payByCash} disabled={!!loading} className="btn-outline w-full">
         {loading === "cash" ? "Setting up…" : "Pay cash at the gym"}
       </button>
-      {error && <p className="text-sm text-primary">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

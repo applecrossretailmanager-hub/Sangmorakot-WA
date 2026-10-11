@@ -183,7 +183,7 @@ function ClassManagePanel({
             </button>
           </form>
           <form action={deleteClassSchedule.bind(null, c.id)}>
-            <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+            <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-danger">
               Delete
             </button>
           </form>

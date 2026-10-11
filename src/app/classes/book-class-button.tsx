@@ -38,12 +38,12 @@ export function BookClassButton({
           <button
             onClick={cancel}
             disabled={loading}
-            className="text-xs text-muted hover:text-primary underline underline-offset-2"
+            className="text-xs text-muted hover:text-danger underline underline-offset-2"
           >
             {loading ? "Cancelling…" : "Cancel"}
           </button>
         </div>
-        {error && <p className="text-xs text-primary mt-1">{error}</p>}
+        {error && <p className="text-xs text-danger mt-1">{error}</p>}
       </div>
     );
   }
@@ -98,7 +98,7 @@ export function BookClassButton({
       <button onClick={book} disabled={loading} className="btn-outline text-sm py-1.5 px-3">
         {loading ? "Booking…" : "Book"}
       </button>
-      {error && <p className="text-xs text-primary mt-1">{error}</p>}
+      {error && <p className="text-xs text-danger mt-1">{error}</p>}
     </div>
   );
 }

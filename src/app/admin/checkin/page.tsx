@@ -165,7 +165,7 @@ export default async function AdminCheckInPage({
             {membership ? (
               <p className="text-sm">
                 {membership.plan?.name} —{" "}
-                <span className={membership.status === "active" ? "text-gold" : "text-primary"}>
+                <span className={membership.status === "active" ? "text-gold" : "text-danger"}>
                   {STATUS_LABEL[membership.status] ?? membership.status}
                 </span>
               </p>

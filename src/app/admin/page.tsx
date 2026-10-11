@@ -113,7 +113,7 @@ export default async function AdminOverviewPage() {
                   {m.plan?.name} — {m.profile?.phone}
                 </p>
               </div>
-              <span className="text-sm text-primary font-medium">
+              <span className="text-sm text-danger font-medium">
                 {STATUS_LABEL[m.status] ?? m.status}
               </span>
             </div>

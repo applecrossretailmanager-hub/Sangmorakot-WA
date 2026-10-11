@@ -52,7 +52,7 @@ export default async function AdminSitePage() {
                   <form action={deleteContactMessage.bind(null, m.id)}>
                     <button
                       type="submit"
-                      className="btn-outline text-sm py-1.5 px-3 w-full hover:text-primary"
+                      className="btn-outline text-sm py-1.5 px-3 w-full hover:text-danger"
                     >
                       Delete
                     </button>
@@ -87,7 +87,7 @@ export default async function AdminSitePage() {
                   </button>
                 </form>
                 <form action={deleteTestimonial.bind(null, t.id)}>
-                  <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-primary">
+                  <button type="submit" className="btn-outline text-sm py-1.5 px-3 hover:text-danger">
                     Delete
                   </button>
                 </form>
