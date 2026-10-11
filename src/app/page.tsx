@@ -38,13 +38,22 @@ export default async function Home() {
             Group classes, memberships, and one-on-one personal training for every level —
             from your first pad session to fight camp.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link href="/membership" className="btn-primary text-base px-6 py-3">
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
+            <Link href="/classes" className="btn-primary text-base px-6 py-3">
+              Claim My Free Class →
+            </Link>
+            <Link href="/membership" className="btn-outline text-base px-6 py-3">
               View Membership Plans
             </Link>
-            <Link href="/personal-training" className="btn-outline text-base px-6 py-3">
-              Book Personal Training
-            </Link>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 max-w-md mx-auto pt-6 border-t border-white/10 text-sm text-muted">
+            <span>
+              <span className="text-gold font-semibold">All levels</span> welcome
+            </span>
+            <span>
+              <span className="text-gold font-semibold">No experience</span> needed
+            </span>
+            <span>📍 <span className="text-gold font-semibold">Bibra Lake,</span> WA</span>
           </div>
         </div>
       </section>
