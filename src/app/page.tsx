@@ -23,50 +23,56 @@ export default async function Home() {
           priority
           className="object-cover object-[center_30%]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/40" />
-        <div className="relative container-page py-24 md:py-32 text-center">
-          <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
-            {site.tagline}
-          </p>
-          <h1 className="font-display uppercase leading-[0.95] tracking-tight text-5xl md:text-7xl mb-6">
-            Train Muay Thai
-            <br />
-            at <span className="text-primary-text">Sangmorakot</span>{" "}
-            <span className="text-gold">WA</span>
-          </h1>
-          <p className="max-w-xl mx-auto text-muted text-lg mb-10">
-            Group classes, memberships, and one-on-one personal training for every level —
-            from your first pad session to fight camp.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
-            <Link href="/classes" className="btn-primary text-base px-6 py-3">
-              Claim My Free Class →
-            </Link>
-            <Link href="/membership" className="btn-outline text-base px-6 py-3">
-              View Membership Plans
-            </Link>
+        <div className="absolute inset-0 bg-gradient-to-r from-background from-10% via-background/90 via-55% to-background/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
+        <div className="relative container-page py-20 md:py-32">
+          <div className="max-w-xl">
+            <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
+              {site.tagline}
+            </p>
+            <h1 className="font-display uppercase leading-[0.95] tracking-tight text-5xl md:text-7xl mb-6">
+              Train Muay Thai
+              <br />
+              at <span className="text-primary-text">Sangmorakot</span>{" "}
+              <span className="text-gold">WA</span>
+            </h1>
+            <p className="text-muted text-lg mb-10">
+              Group classes, memberships, and one-on-one personal training for every level —
+              from your first pad session to fight camp.
+            </p>
+            <div className="flex flex-wrap items-center gap-4 mb-10">
+              <Link href="/classes" className="btn-primary text-base px-6 py-3">
+                Claim My Free Class →
+              </Link>
+              <Link href="/membership" className="btn-outline text-base px-6 py-3">
+                View Membership Plans
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-6 border-t border-white/10 text-sm text-muted">
+              <span>
+                <span className="text-gold font-semibold">All levels</span> welcome
+              </span>
+              <span>
+                <span className="text-gold font-semibold">No experience</span> needed
+              </span>
+              <span>📍 <span className="text-gold font-semibold">Bibra Lake,</span> WA</span>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 max-w-md mx-auto pt-6 border-t border-white/10 text-sm text-muted">
-            <span>
-              <span className="text-gold font-semibold">All levels</span> welcome
-            </span>
-            <span>
-              <span className="text-gold font-semibold">No experience</span> needed
-            </span>
-            <span>📍 <span className="text-gold font-semibold">Bibra Lake,</span> WA</span>
-          </div>
-        </div>
-      </section>
 
-      <section className="border-b border-border bg-gold/10">
-        <div className="container-page py-6 flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
-          <p className="font-medium">
-            <span className="text-gold">New here?</span> Your first class is free — no
-            experience necessary, just come along.
-          </p>
-          <Link href="/classes" className="text-sm text-gold hover:underline whitespace-nowrap">
-            See class times →
-          </Link>
+          <div className="mt-12 md:mt-0 md:absolute md:bottom-12 md:right-5 md:w-72 rounded-xl border border-white/15 bg-background/70 backdrop-blur-sm p-5 shadow-xl">
+            <p className="text-gold uppercase tracking-[0.2em] text-[11px] font-semibold mb-2">
+              New here?
+            </p>
+            <p className="font-display uppercase text-xl leading-tight mb-2">
+              Your first class is free
+            </p>
+            <p className="text-sm text-muted mb-4">
+              No experience, no contract — just come along and see what we&rsquo;re about.
+            </p>
+            <Link href="/classes" className="text-sm text-gold hover:underline font-medium">
+              See class times →
+            </Link>
+          </div>
         </div>
       </section>
 
