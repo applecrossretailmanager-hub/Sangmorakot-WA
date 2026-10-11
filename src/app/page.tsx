@@ -25,7 +25,7 @@ export default async function Home() {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background from-10% via-background/90 via-55% to-background/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
-        <div className="relative container-page py-20 md:py-32">
+        <div className="relative container-page py-20 md:py-32 flex flex-col md:flex-row md:items-center gap-10 md:gap-6">
           <div className="max-w-xl">
             <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
               {site.tagline}
@@ -59,7 +59,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mt-12 md:mt-0 md:absolute md:bottom-12 md:right-5 md:w-72 rounded-xl border border-white/15 bg-background/70 backdrop-blur-sm p-5 shadow-xl">
+          <div className="md:ml-auto md:w-72 md:flex-shrink-0 rounded-xl border border-white/15 bg-background/70 backdrop-blur-sm p-5 shadow-xl">
             <p className="text-gold uppercase tracking-[0.2em] text-[11px] font-semibold mb-2">
               New here?
             </p>
