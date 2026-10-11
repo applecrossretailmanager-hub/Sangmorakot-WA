@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { DAY_LABELS } from "@/lib/days";
-import { formatDayHeading } from "@/lib/format";
+import { formatDayHeading, formatMoney } from "@/lib/format";
 import {
   createClassSchedule,
   bulkDeleteClassSchedule,
   cancelClassBookingAdmin,
   toggleClassCheckIn,
+  markClassBookingPaid,
 } from "../actions";
 import { AdminClassGrid } from "./class-grid";
 
@@ -46,6 +47,7 @@ export default async function AdminClassesPage() {
         name: string;
         checkedInAt: string | null;
         isFreeTrial: boolean;
+        owes: { bookingId: string; amountCents: number; currency: string } | null;
       }[];
     }
   >();
@@ -65,6 +67,10 @@ export default async function AdminClassesPage() {
       name: b.profile?.full_name ?? "Member",
       checkedInAt: b.checked_in_at,
       isFreeTrial: b.is_free_trial,
+      owes:
+        b.requires_payment && !b.paid_at
+          ? { bookingId: b.id, amountCents: b.amount_due_cents ?? 0, currency: b.currency ?? "AUD" }
+          : null,
     });
   }
   const occurrences = Array.from(rosterByOccurrence.entries()).sort(([, a], [, b]) =>
@@ -197,6 +203,7 @@ function RosterCard({
       name: string;
       checkedInAt: string | null;
       isFreeTrial: boolean;
+      owes: { bookingId: string; amountCents: number; currency: string } | null;
     }[];
   };
 }) {
@@ -222,8 +229,20 @@ function RosterCard({
                   First timer
                 </span>
               )}
+              {a.owes && (
+                <span className="ml-2 text-xs text-danger border border-danger/40 rounded px-1.5 py-0.5">
+                  Owes {formatMoney(a.owes.amountCents, a.owes.currency)}
+                </span>
+              )}
             </span>
             <div className="flex items-center gap-3">
+              {a.owes && (
+                <form action={markClassBookingPaid.bind(null, a.owes.bookingId)}>
+                  <button type="submit" className="text-xs text-gold hover:underline">
+                    Mark paid
+                  </button>
+                </form>
+              )}
               <form action={toggleClassCheckIn.bind(null, a.id, !a.checkedInAt)}>
                 <button
                   type="submit"

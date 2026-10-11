@@ -7,6 +7,7 @@ import {
   adminRecordCashMembership,
   adminRecordCashPtPackage,
   toggleClassCheckIn,
+  markClassBookingPaid,
 } from "../actions";
 
 export const revalidate = 0;
@@ -21,6 +22,13 @@ const STATUS_LABEL: Record<string, string> = {
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formatClassDate(dateKey: string) {
+  return new Date(`${dateKey}T00:00:00`).toLocaleDateString("en-AU", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
 export default async function AdminCheckInPage({
@@ -61,6 +69,13 @@ export default async function AdminCheckInPage({
     checkedIn: boolean;
     bookingId: string | null;
   }[] = [];
+  let unpaidClasses: {
+    bookingId: string;
+    name: string;
+    classDate: string;
+    amountCents: number;
+    currency: string;
+  }[] = [];
 
   if (memberId) {
     const { data: profile } = await admin
@@ -71,7 +86,7 @@ export default async function AdminCheckInPage({
     member = profile;
 
     if (member) {
-      const [{ data: membershipRow }, { data: purchases }, { data: classSchedule }, { data: bookings }] =
+      const [{ data: membershipRow }, { data: purchases }, { data: classSchedule }, { data: bookings }, { data: unpaid }] =
         await Promise.all([
           admin
             .from("memberships")
@@ -98,6 +113,14 @@ export default async function AdminCheckInPage({
             .eq("user_id", member.id)
             .eq("class_date", todayIso())
             .eq("status", "booked"),
+          admin
+            .from("class_bookings")
+            .select("id, class_date, amount_due_cents, currency, schedule:class_schedule(name)")
+            .eq("user_id", member.id)
+            .eq("status", "booked")
+            .eq("requires_payment", true)
+            .is("paid_at", null)
+            .order("class_date"),
         ]);
 
       membership = membershipRow;
@@ -114,6 +137,14 @@ export default async function AdminCheckInPage({
           bookingId: booking?.id ?? null,
         };
       });
+
+      unpaidClasses = (unpaid ?? []).map((b) => ({
+        bookingId: b.id,
+        name: b.schedule?.name ?? "Class",
+        classDate: b.class_date,
+        amountCents: b.amount_due_cents ?? 0,
+        currency: b.currency ?? "AUD",
+      }));
     }
   }
 
@@ -216,6 +247,33 @@ export default async function AdminCheckInPage({
               </form>
             )}
           </div>
+
+          {!!unpaidClasses.length && (
+            <div className="card border-danger/40">
+              <h3 className="font-semibold mb-3 text-danger">
+                Outstanding Class Payments —{" "}
+                {formatMoney(
+                  unpaidClasses.reduce((s, c) => s + c.amountCents, 0),
+                  unpaidClasses[0]?.currency,
+                )}
+              </h3>
+              <div className="space-y-2">
+                {unpaidClasses.map((c) => (
+                  <div key={c.bookingId} className="flex items-center justify-between gap-4 py-1">
+                    <p className="text-sm">
+                      {formatClassDate(c.classDate)} — {c.name} —{" "}
+                      {formatMoney(c.amountCents, c.currency)}
+                    </p>
+                    <form action={markClassBookingPaid.bind(null, c.bookingId)}>
+                      <button type="submit" className="btn-primary text-sm py-1.5 px-3">
+                        Mark paid
+                      </button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="card">
             <h3 className="font-semibold mb-3">Today&rsquo;s Classes</h3>

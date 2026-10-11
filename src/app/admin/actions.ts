@@ -333,6 +333,35 @@ export async function markPtPurchasePaid(id: string) {
   revalidatePath("/admin/personal-training");
 }
 
+export async function markClassBookingPaid(bookingId: string) {
+  const admin = await requireAdmin();
+  const supabase = await createClient();
+  const { data: booking } = await supabase
+    .from("class_bookings")
+    .select("id, user_id, amount_due_cents, currency, requires_payment, paid_at")
+    .eq("id", bookingId)
+    .single();
+
+  if (!booking || !booking.requires_payment || booking.paid_at) return;
+
+  await supabase.from("class_bookings").update({ paid_at: new Date().toISOString() }).eq("id", bookingId);
+
+  await supabase.from("payments").insert({
+    user_id: booking.user_id,
+    type: "class",
+    reference_id: booking.id,
+    amount_cents: booking.amount_due_cents ?? 0,
+    currency: booking.currency ?? "AUD",
+    method: "cash",
+    status: "succeeded",
+    received_by: admin.id,
+  });
+
+  revalidatePath("/admin/members");
+  revalidatePath("/admin/checkin");
+  revalidatePath("/admin/classes");
+}
+
 // ---------- trainers & availability ----------
 
 export async function createTrainer(formData: FormData) {

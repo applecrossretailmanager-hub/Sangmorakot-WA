@@ -16,31 +16,43 @@ export type Database = {
     Tables: {
       class_bookings: {
         Row: {
+          amount_due_cents: number | null
           checked_in_at: string | null
           class_date: string
           created_at: string
+          currency: string | null
           id: string
           is_free_trial: boolean
+          paid_at: string | null
+          requires_payment: boolean
           schedule_id: string
           status: string
           user_id: string
         }
         Insert: {
+          amount_due_cents?: number | null
           checked_in_at?: string | null
           class_date: string
           created_at?: string
+          currency?: string | null
           id?: string
           is_free_trial?: boolean
+          paid_at?: string | null
+          requires_payment?: boolean
           schedule_id: string
           status?: string
           user_id: string
         }
         Update: {
+          amount_due_cents?: number | null
           checked_in_at?: string | null
           class_date?: string
           created_at?: string
+          currency?: string | null
           id?: string
           is_free_trial?: boolean
+          paid_at?: string | null
+          requires_payment?: boolean
           schedule_id?: string
           status?: string
           user_id?: string
@@ -656,11 +668,15 @@ export type Database = {
       book_class: {
         Args: { p_class_date: string; p_schedule_id: string }
         Returns: {
+          amount_due_cents: number | null
           checked_in_at: string | null
           class_date: string
           created_at: string
+          currency: string | null
           id: string
           is_free_trial: boolean
+          paid_at: string | null
+          requires_payment: boolean
           schedule_id: string
           status: string
           user_id: string
@@ -695,11 +711,15 @@ export type Database = {
       cancel_class_booking: {
         Args: { p_booking_id: string }
         Returns: {
+          amount_due_cents: number | null
           checked_in_at: string | null
           class_date: string
           created_at: string
+          currency: string | null
           id: string
           is_free_trial: boolean
+          paid_at: string | null
+          requires_payment: boolean
           schedule_id: string
           status: string
           user_id: string

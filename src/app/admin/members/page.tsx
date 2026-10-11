@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
-import { markMembershipPaid, cancelMembership, markPtPurchasePaid, setMemberRole } from "../actions";
+import {
+  markMembershipPaid,
+  cancelMembership,
+  markPtPurchasePaid,
+  markClassBookingPaid,
+  setMemberRole,
+} from "../actions";
 
 export const revalidate = 0;
 
@@ -24,6 +30,7 @@ const STATUS_COLOR: Record<string, string> = {
 const PAYMENT_TYPE_LABEL: Record<string, string> = {
   membership: "Membership",
   pt_package: "PT Package",
+  class: "Class",
 };
 
 function formatDate(iso: string | null) {
@@ -48,48 +55,84 @@ function formatDateTime(iso: string) {
 export default async function AdminMembersPage() {
   const supabase = await createClient();
 
-  const [{ data: memberships }, { data: pendingPurchases }, { data: profiles }, { data: payments }, { data: waivers }] =
-    await Promise.all([
-      supabase
-        .from("memberships")
-        .select("*, profile:profiles(full_name, phone), plan:membership_plans(name, price_cents, currency)")
-        .order("created_at", { ascending: false })
-        .limit(100),
-      supabase
-        .from("pt_purchases")
-        .select("*, profile:profiles(full_name), package:pt_packages(name, price_cents, currency)")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(100),
-      supabase
-        .from("payments")
-        .select("*, profile:profiles!payments_user_id_fkey(full_name)")
-        .order("created_at", { ascending: false })
-        .limit(150),
-      supabase.from("waivers").select("user_id, accepted_at"),
-    ]);
+  const [
+    { data: memberships },
+    { data: pendingPurchases },
+    { data: unpaidClassBookings },
+    { data: profiles },
+    { data: payments },
+    { data: waivers },
+  ] = await Promise.all([
+    supabase
+      .from("memberships")
+      .select("*, profile:profiles(full_name, phone), plan:membership_plans(name, price_cents, currency)")
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("pt_purchases")
+      .select("*, profile:profiles(full_name), package:pt_packages(name, price_cents, currency)")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("class_bookings")
+      .select("*, profile:profiles(full_name, phone), schedule:class_schedule(name)")
+      .eq("requires_payment", true)
+      .is("paid_at", null)
+      .eq("status", "booked")
+      .order("class_date", { ascending: true }),
+    supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(100),
+    supabase
+      .from("payments")
+      .select("*, profile:profiles!payments_user_id_fkey(full_name)")
+      .order("created_at", { ascending: false })
+      .limit(150),
+    supabase.from("waivers").select("user_id, accepted_at"),
+  ]);
 
   const waiverByUserId = new Map(waivers?.map((w) => [w.user_id, w.accepted_at]) ?? []);
+
+  const paymentsDueCount = (pendingPurchases?.length ?? 0) + (unpaidClassBookings?.length ?? 0);
 
   const attentionCount =
     memberships?.filter((m) => m.status === "pending_cash" || m.status === "past_due").length ?? 0;
 
   return (
     <div className="space-y-16">
-      {!!pendingPurchases?.length && (
+      {!!paymentsDueCount && (
         <section>
-          <h2 className="text-xl font-bold mb-4">Pending Cash — Personal Training</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold">Payments Due</h2>
+            <span className="text-sm text-danger font-medium">
+              {paymentsDueCount} payment{paymentsDueCount === 1 ? "" : "s"} to collect
+            </span>
+          </div>
           <div className="space-y-3">
-            {pendingPurchases.map((p) => (
-              <div key={p.id} className="card flex flex-wrap items-center justify-between gap-4">
+            {pendingPurchases?.map((p) => (
+              <div key={`pt_${p.id}`} className="card flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="font-medium">{p.profile?.full_name ?? "Member"}</p>
                   <p className="text-sm text-muted">
-                    {p.package?.name} —{" "}
+                    PT package — {p.package?.name} —{" "}
                     {formatMoney(p.package?.price_cents ?? 0, p.package?.currency?.toUpperCase())}
                   </p>
                 </div>
                 <form action={markPtPurchasePaid.bind(null, p.id)}>
+                  <button type="submit" className="btn-primary text-sm py-1.5 px-3">
+                    Mark cash received
+                  </button>
+                </form>
+              </div>
+            ))}
+            {unpaidClassBookings?.map((b) => (
+              <div key={`class_${b.id}`} className="card flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium">{b.profile?.full_name ?? "Member"}</p>
+                  <p className="text-sm text-muted">
+                    Class — {b.schedule?.name} on {formatDate(b.class_date)} —{" "}
+                    {formatMoney(b.amount_due_cents ?? 0, b.currency ?? "AUD")}
+                  </p>
+                </div>
+                <form action={markClassBookingPaid.bind(null, b.id)}>
                   <button type="submit" className="btn-primary text-sm py-1.5 px-3">
                     Mark cash received
                   </button>
