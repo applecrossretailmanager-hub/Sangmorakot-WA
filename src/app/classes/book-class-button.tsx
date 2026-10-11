@@ -24,9 +24,17 @@ export function BookClassButton({
 
   if (!isLoggedIn) {
     return (
-      <Link href={`/login?next=${encodeURIComponent("/classes")}`} className="btn-outline text-sm py-1.5 px-3">
-        Log in to book
-      </Link>
+      <div className="text-right">
+        <Link href={`/signup?next=${encodeURIComponent("/classes")}`} className="btn-primary text-sm py-1.5 px-3">
+          Sign up to book
+        </Link>
+        <p className="text-xs text-muted mt-1">
+          Already a member?{" "}
+          <Link href={`/login?next=${encodeURIComponent("/classes")}`} className="text-gold hover:underline">
+            Log in
+          </Link>
+        </p>
+      </div>
     );
   }
 

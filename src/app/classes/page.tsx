@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { MonthCalendar } from "./month-calendar";
@@ -78,9 +79,26 @@ export default async function ClassesPage({
           Class Timetable
         </h1>
         <p className="text-muted">
-          Browse a full month, see live spots left, and log in to book any class.
+          Browse a full month and see live spots left. Sign up free to book any class.
         </p>
       </div>
+
+      {!user && (
+        <div className="max-w-2xl mx-auto mb-12 rounded-xl border border-gold/40 bg-gold/10 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div>
+            <p className="font-medium">
+              <span className="text-gold">New here?</span> Create a free account to book your
+              first class — no card required.
+            </p>
+          </div>
+          <Link
+            href={`/signup?next=${encodeURIComponent("/classes")}`}
+            className="btn-primary text-sm px-5 py-2.5 whitespace-nowrap"
+          >
+            Sign Up Free
+          </Link>
+        </div>
+      )}
 
       {!schedule?.length ? (
         <p className="text-center text-muted">No classes scheduled yet — check back soon.</p>
