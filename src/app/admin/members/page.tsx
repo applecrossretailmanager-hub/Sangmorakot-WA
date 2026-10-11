@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatMoney } from "@/lib/format";
 import { markMembershipPaid, cancelMembership, markPtPurchasePaid, setMemberRole } from "../actions";
@@ -47,7 +48,7 @@ function formatDateTime(iso: string) {
 export default async function AdminMembersPage() {
   const supabase = await createClient();
 
-  const [{ data: memberships }, { data: pendingPurchases }, { data: profiles }, { data: payments }] =
+  const [{ data: memberships }, { data: pendingPurchases }, { data: profiles }, { data: payments }, { data: waivers }] =
     await Promise.all([
       supabase
         .from("memberships")
@@ -65,7 +66,10 @@ export default async function AdminMembersPage() {
         .select("*, profile:profiles!payments_user_id_fkey(full_name)")
         .order("created_at", { ascending: false })
         .limit(150),
+      supabase.from("waivers").select("user_id, accepted_at"),
     ]);
+
+  const waiverByUserId = new Map(waivers?.map((w) => [w.user_id, w.accepted_at]) ?? []);
 
   const attentionCount =
     memberships?.filter((m) => m.status === "pending_cash" || m.status === "past_due").length ?? 0;
@@ -216,24 +220,40 @@ export default async function AdminMembersPage() {
                 <th className="py-2 pr-4">Name</th>
                 <th className="py-2 pr-4">Phone</th>
                 <th className="py-2 pr-4">Role</th>
+                <th className="py-2 pr-4">Waiver</th>
                 <th className="py-2 pr-4"></th>
               </tr>
             </thead>
             <tbody>
-              {profiles?.map((p) => (
-                <tr key={p.id} className="border-b border-border/60">
-                  <td className="py-3 pr-4">{p.full_name ?? "—"}</td>
-                  <td className="py-3 pr-4">{p.phone ?? "—"}</td>
-                  <td className="py-3 pr-4 capitalize">{p.role}</td>
-                  <td className="py-3 pr-4 text-right">
-                    <form action={setMemberRole.bind(null, p.id, p.role === "admin" ? "member" : "admin")}>
-                      <button type="submit" className="btn-outline text-xs py-1 px-2">
-                        {p.role === "admin" ? "Remove admin" : "Make admin"}
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
+              {profiles?.map((p) => {
+                const waiverAcceptedAt = waiverByUserId.get(p.id);
+                return (
+                  <tr key={p.id} className="border-b border-border/60">
+                    <td className="py-3 pr-4">{p.full_name ?? "—"}</td>
+                    <td className="py-3 pr-4">{p.phone ?? "—"}</td>
+                    <td className="py-3 pr-4 capitalize">{p.role}</td>
+                    <td className="py-3 pr-4">
+                      {waiverAcceptedAt ? (
+                        <Link
+                          href={`/admin/members/${p.id}/waiver`}
+                          className="text-gold hover:underline whitespace-nowrap"
+                        >
+                          Signed {formatDate(waiverAcceptedAt)}
+                        </Link>
+                      ) : (
+                        <span className="text-danger">Not signed</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      <form action={setMemberRole.bind(null, p.id, p.role === "admin" ? "member" : "admin")}>
+                        <button type="submit" className="btn-outline text-xs py-1 px-2">
+                          {p.role === "admin" ? "Remove admin" : "Make admin"}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

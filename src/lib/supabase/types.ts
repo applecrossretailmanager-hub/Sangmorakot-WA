@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -137,27 +139,6 @@ export type Database = {
         }
         Relationships: []
       }
-      payment_settings: {
-        Row: {
-          becs_enabled: boolean
-          card_enabled: boolean
-          id: boolean
-          updated_at: string
-        }
-        Insert: {
-          becs_enabled?: boolean
-          card_enabled?: boolean
-          id?: boolean
-          updated_at?: string
-        }
-        Update: {
-          becs_enabled?: boolean
-          card_enabled?: boolean
-          id?: boolean
-          updated_at?: string
-        }
-        Relationships: []
-      }
       membership_plans: {
         Row: {
           active: boolean
@@ -259,6 +240,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_settings: {
+        Row: {
+          becs_enabled: boolean
+          card_enabled: boolean
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          becs_enabled?: boolean
+          card_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          becs_enabled?: boolean
+          card_enabled?: boolean
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -539,33 +541,6 @@ export type Database = {
           },
         ]
       }
-      testimonials: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          name: string
-          quote: string
-          sort_order: number
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name: string
-          quote: string
-          sort_order?: number
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name?: string
-          quote?: string
-          sort_order?: number
-        }
-        Relationships: []
-      }
       pt_trainers: {
         Row: {
           active: boolean
@@ -596,6 +571,68 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          quote: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          quote: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          quote?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      waivers: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          full_name: string
+          id: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          full_name: string
+          id?: string
+          user_id: string
+          version?: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          full_name?: string
+          id?: string
+          user_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waivers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -604,6 +641,7 @@ export type Database = {
       book_class: {
         Args: { p_class_date: string; p_schedule_id: string }
         Returns: {
+          checked_in_at: string | null
           class_date: string
           created_at: string
           id: string
@@ -612,32 +650,12 @@ export type Database = {
           status: string
           user_id: string
         }
-      }
-      cancel_class_booking: {
-        Args: { p_booking_id: string }
-        Returns: {
-          class_date: string
-          created_at: string
-          id: string
-          is_free_trial: boolean
-          schedule_id: string
-          status: string
-          user_id: string
+        SetofOptions: {
+          from: "*"
+          to: "class_bookings"
+          isOneToOne: true
+          isSetofReturn: false
         }
-      }
-      get_class_occurrences: {
-        Args: { p_from: string; p_to: string }
-        Returns: {
-          booked_count: number
-          capacity: number
-          class_date: string
-          description: string | null
-          end_at: string
-          name: string
-          schedule_id: string
-          start_at: string
-          trainer_name: string | null
-        }[]
       }
       book_pt_session: {
         Args: { p_end_at: string; p_start_at: string; p_trainer_id: string }
@@ -651,6 +669,31 @@ export type Database = {
           status: string
           trainer_id: string
           user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "pt_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_class_booking: {
+        Args: { p_booking_id: string }
+        Returns: {
+          checked_in_at: string | null
+          class_date: string
+          created_at: string
+          id: string
+          is_free_trial: boolean
+          schedule_id: string
+          status: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "class_bookings"
+          isOneToOne: true
+          isSetofReturn: false
         }
       }
       cancel_pt_booking: {
@@ -666,6 +709,27 @@ export type Database = {
           trainer_id: string
           user_id: string
         }
+        SetofOptions: {
+          from: "*"
+          to: "pt_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      dismiss_pt_purchase_notice: { Args: { p_id: string }; Returns: undefined }
+      get_class_occurrences: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          booked_count: number
+          capacity: number
+          class_date: string
+          description: string
+          end_at: string
+          name: string
+          schedule_id: string
+          start_at: string
+          trainer_name: string
+        }[]
       }
       get_open_pt_slots: {
         Args: { p_from: string; p_to: string; p_trainer_id: string }
@@ -675,7 +739,6 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
-      dismiss_pt_purchase_notice: { Args: { p_id: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
@@ -686,16 +749,125 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database["public"]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  T extends keyof DefaultSchema["Tables"],
-> = DefaultSchema["Tables"][T]["Row"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
-  T extends keyof DefaultSchema["Tables"],
-> = DefaultSchema["Tables"][T]["Insert"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
-  T extends keyof DefaultSchema["Tables"],
-> = DefaultSchema["Tables"][T]["Update"]
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

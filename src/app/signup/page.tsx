@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { WAIVER_TEXT, WAIVER_VERSION } from "@/lib/waiver";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function SignupPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agreedToWaiver, setAgreedToWaiver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
@@ -28,7 +30,12 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { full_name: fullName, phone },
+        data: {
+          full_name: fullName,
+          phone,
+          waiver_version: WAIVER_VERSION,
+          waiver_accepted_at: new Date().toISOString(),
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
       },
     });
@@ -108,11 +115,34 @@ export default function SignupPage() {
           />
         </Field>
 
+        <div>
+          <details className="rounded-md border border-border bg-surface mb-3">
+            <summary className="cursor-pointer select-none px-3 py-2 text-sm text-gold">
+              Read Terms &amp; Conditions and Liability Waiver
+            </summary>
+            <div className="max-h-56 overflow-y-auto scroll-dark border-t border-border px-3 py-3 text-xs text-muted whitespace-pre-line leading-relaxed">
+              {WAIVER_TEXT}
+            </div>
+          </details>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              required
+              checked={agreedToWaiver}
+              onChange={(e) => setAgreedToWaiver(e.target.checked)}
+              className="mt-1"
+            />
+            <span>
+              I have read and agree to the Terms &amp; Conditions and Liability Waiver above.
+            </span>
+          </label>
+        </div>
+
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !agreedToWaiver}
           className="w-full rounded-md bg-primary py-2.5 font-medium text-white hover:bg-primary-hover transition-colors disabled:opacity-60"
         >
           {loading ? "Creating account…" : "Create account"}
