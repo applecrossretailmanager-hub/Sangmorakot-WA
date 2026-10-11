@@ -24,36 +24,38 @@ export default async function Home() {
           className="object-cover object-[center_30%]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/40" />
-        <div className="relative container-page py-24 md:py-32 text-center">
-          <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
-            {site.tagline}
-          </p>
-          <h1 className="font-display uppercase leading-[0.95] tracking-tight text-5xl md:text-7xl mb-6">
-            Train Muay Thai
-            <br />
-            at <span className="text-primary-text">Sangmorakot</span>{" "}
-            <span className="text-gold">WA</span>
-          </h1>
-          <p className="max-w-xl mx-auto text-muted text-lg mb-10">
-            Group classes, memberships, and one-on-one personal training for every level —
-            from your first pad session to fight camp.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
-            <Link href="/classes" className="btn-primary text-base px-6 py-3">
-              Claim My Free Class →
-            </Link>
-            <Link href="/membership" className="btn-outline text-base px-6 py-3">
-              View Membership Plans
-            </Link>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 max-w-md mx-auto pt-6 border-t border-white/10 text-sm text-muted">
-            <span>
-              <span className="text-gold font-semibold">All levels</span> welcome
-            </span>
-            <span>
-              <span className="text-gold font-semibold">No experience</span> needed
-            </span>
-            <span>📍 <span className="text-gold font-semibold">Bibra Lake,</span> WA</span>
+        <div className="relative container-page py-24 md:py-32">
+          <div className="max-w-xl">
+            <p className="text-gold uppercase tracking-[0.3em] text-xs font-medium mb-4">
+              {site.tagline}
+            </p>
+            <h1 className="font-display uppercase leading-[0.95] tracking-tight text-5xl md:text-7xl mb-6">
+              Train Muay Thai
+              <br />
+              at <span className="text-primary-text">Sangmorakot</span>{" "}
+              <span className="text-gold">WA</span>
+            </h1>
+            <p className="text-muted text-lg mb-10">
+              Group classes, memberships, and one-on-one personal training for every level —
+              from your first pad session to fight camp.
+            </p>
+            <div className="flex flex-wrap items-center gap-4 mb-10">
+              <Link href="/classes" className="btn-primary text-base px-6 py-3">
+                Claim My Free Class →
+              </Link>
+              <Link href="/membership" className="btn-outline text-base px-6 py-3">
+                View Membership Plans
+              </Link>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-6 border-t border-white/10 text-sm text-muted">
+              <span>
+                <span className="text-gold font-semibold">All levels</span> welcome
+              </span>
+              <span>
+                <span className="text-gold font-semibold">No experience</span> needed
+              </span>
+              <span>📍 <span className="text-gold font-semibold">Bibra Lake,</span> WA</span>
+            </div>
           </div>
         </div>
       </section>
